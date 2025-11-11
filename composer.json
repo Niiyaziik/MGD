@@ -1,0 +1,23 @@
+{
+    "name": "mgd/mgd",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "scripts": {
+        "migrate": "php -r \"require __DIR__ . '/bootstrap.php';\"",
+        "db:fresh": "php database/fresh.php"
+    },
+    "authors": [
+        {
+            "name": "Niiyaziik",
+            "email": "144729110+niiyaziik@users.noreply.github.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+    
+}
