@@ -21,11 +21,11 @@
         </div>
         <nav class="left-side__navigation">
             <ul>
-                <li><a href="/main/">Главная</a></li>
+                <li><a href="/">Главная</a></li>
 
-                <li><a href="/candidates/">Кандидаты</a></li>
+                <li><a href="/candidates">Кандидаты</a></li>
 
-                <li><a href="/districts/">Округа</a></li>
+                <li><a href="/districts">Округа</a></li>
 
                 <li style="display: none">Округа</li>
             </ul>
@@ -289,15 +289,14 @@
                 </li>
             </ul>
         </div>
-        <div id="candidates" class="content-list__content"
-             style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+        <div id="candidates" class="content-list__content">
             <h2 class="content-list__title">Кандидаты Молодежной городской думы</h2>
             <div class="all-news-list">
-                    <a href="/candidate/">Все кандидаты</a>
+                    <a href="/candidates">Все кандидаты</a>
             </div>
         </div>
         <ul class="candidate-list">
-                <li class="candidate-card">
+                <!-- <li class="candidate-card">
                     <a  href="/candidate/page/{id}">
                         <div class="candidate-card__figure">
                             <img class="candidate-card__photo" src="https://ugd.ru/upload/iblock/498/5jt1gj804zcedtiwjmi7ef3y2ocxgib6/2-Golubev.png" alt="Акимов Данила Александрович">
@@ -310,9 +309,8 @@
                             <div class="candidate-card__email">molduma@ugd.ru</div>
                         </a>
                     </a>
-                </li>
-            </ul>
-        
+                </li> -->
+            </ul>       
     </section>
             <section class="useful-links">
                 <h2 class="useful-links__title">Полезные ссылки</h2>
@@ -405,6 +403,40 @@
     -->
     </div>
 </footer>
-<div class="footer-copyright-design"><div class="container">Разработано в <a href="http://agatech.ru/" target="_blank" title="agatech.ru">AGATECH</a></div></div>
+<script>
+    (async function(){
+    const ul = document.querySelector('.candidate-list');
+    if (!ul) return;
+    const res = await fetch('/candidates?format=json&limit=5');
+    const data = await res.json();
+
+    const tpl = (c) => `
+        <li class="candidate-card">
+        <div class="candidate-card__link">
+            <div class="candidate-card__figure">
+                <a href="/candidate.html?id=${Number(c.id)}">
+                    <img
+                        class="candidates-card__photo"
+                        src="${c.photo ? c.photo : '/assets/img/candidates/placeholder.jpeg'}"
+                        alt="${(c.surname || '') + ' ' + (c.name || '') + ' ' + (c.patronymic || '')}">
+                </a>
+                <a class="vote-btn" data-id="${c.id}" href="#">Проголосовать</a>
+            </div>
+            <a class="candidate-card__body" href="/candidate.html?id=${Number(c.id)}">
+            <h3 class="candidate-card__name">
+                ${(c.surname||'')+' '+(c.name||'')}<br>${(c.patronymic||'')}
+            </h3>
+            <div class="candidate-card__role">Кандидат Молодёжной Думы</div>
+            <div class="candidate-card__district">Округ ${(c.district_name||c.district||'')}</div>
+            <div class="candidate-card__email">${(c.email||'')}</div>
+            </a>
+        </div>
+        </li>`;
+    ul.innerHTML = data.map(tpl).join('');
+    })();
+</script>
+<script src="/js/load-modals.js"></script>
+<script src="/js/modals.js"></script>
 </body>
 </html>
+

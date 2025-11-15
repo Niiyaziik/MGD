@@ -5,6 +5,12 @@ require __DIR__ . '/vendor/autoload.php';
 
 use App\App\Container;
 use App\App\Database;
+use App\Controller\{
+    CandidateController,
+    DistrictController,
+    UserController,
+    VoteController,
+    AdminController};
 use App\Repository\Contract\{
     CandidateRepositoryInterface,
     UserRepositoryInterface,
@@ -143,6 +149,16 @@ $container = new Container();
 
 $container->set(PDO::class, fn() => Database::pdo());
 
+$container->set(
+    CandidateController::class,
+    fn($c) => new CandidateController($c->get(CandidateRepositoryInterface::class))
+);
+
+$container->set(
+    DistrictController::class,
+    fn($c) => new DistrictController($c->get(DistrictRepositoryInterface::class))
+);
+
 $container->set(CandidateRepositoryInterface::class,
     fn($c) => new CandidateRepository($c->get(PDO::class))
 );
@@ -161,24 +177,24 @@ $container->set(AdminRepositoryInterface::class,
 
 $container->set(VoteService::class, fn($c)=> new VoteService(
     $c->get(PDO::class),
-    $c->get(\App\Repositories\Contracts\UserRepositoryInterface::class),
-    $c->get(\App\Repositories\Contracts\CandidateRepositoryInterface::class),
-    $c->get(\App\Repositories\Contracts\VoteRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\UserRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\CandidateRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\VoteRepositoryInterface::class),
 ));
 
 $container->set(UserService::class, fn($c)=> new UserService(
     $c->get(PDO::class),
-    $c->get(\App\Repositories\Contracts\UserRepositoryInterface::class),
-    $c->get(\App\Repositories\Contracts\DistrictRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\UserRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\DistrictRepositoryInterface::class),
 ));
 
 $container->set(CandidateService::class, fn($c)=> new CandidateService(
-    $c->get(\App\Repositories\Contracts\CandidateRepositoryInterface::class),
-    $c->get(\App\Repositories\Contracts\DistrictRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\CandidateRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\DistrictRepositoryInterface::class),
 ));
 
 $container->set(AdminAuthService::class, fn($c)=> new AdminAuthService(
-    $c->get(\App\Repositories\Contracts\AdminRepositoryInterface::class),
+    $c->get(\App\Repository\Contract\AdminRepositoryInterface::class),
 ));
 
 return $container;

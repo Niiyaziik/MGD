@@ -12,34 +12,71 @@ class DistrictController extends BaseController
 
     // GET /api/districts
     public function index(): void
-    {
-        $this->requireMethod('GET');
+{
+    $this->requireMethod('GET');
 
+    // Определяем нужен ли JSON
+    $json = (isset($_GET['format']) && $_GET['format'] === 'json')
+         || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+
+    // Если JSON — вернуть данные округов
+    if ($json) {
         try {
-            // Если у репозитория есть пагинация — подставь свои методы/параметры
-            $items = $this->districts->all(); // верни только не удалённые (deleted_at IS NULL)
-            $this->json(['ok' => true, 'data' => $items]);
+            $items = $this->districts->all(); // только не удалённые (deleted_at IS NULL)
+            $this->json($items);
+            return;
         } catch (Throwable $e) {
-            $this->json(['ok' => false, 'error' => 'Внутренняя ошибка'], 500);
+            $this->json(['error' => 'Внутренняя ошибка'], 500);
+            return;
         }
     }
 
-    // GET /api/districts/{id}
-    public function show(int $id): void
-    {
-        $this->requireMethod('GET');
+    // Если HTML — отдаём страницу округов
+    header_remove('Content-Type');
+    header('Content-Type: text/html; charset=utf-8');
+    readfile(__DIR__ . '/../../public/districts.html');
+}
 
+
+    public function show(): void
+{
+    $this->requireMethod('GET');
+
+    $district = (int)($_GET['district'] ?? 0);
+    if ($district <= 0) {
+        $this->json(['error' => 'Некорректный номер округа'], 400);
+        return;
+    }
+
+    // Определяем формат: JSON или HTML
+    $wantsJson = 
+        (isset($_GET['format']) && $_GET['format'] === 'json')
+        || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+
+    if ($wantsJson) {
+        // ---- JSON ----
         try {
-            $district = $this->districts->findById($id);
-            if (!$district || $district->deleted_at !== null) {
-                $this->json(['ok' => false, 'error' => 'Округ не найден'], 404);
+            $rows = $this->districts->find($district); // массив строк
+
+            if (!$rows) {
+                $this->json(['error' => 'Округ не найден'], 404);
                 return;
             }
-            $this->json(['ok' => true, 'data' => $district]);
-        } catch (Throwable $e) {
-            $this->json(['ok' => false, 'error' => 'Внутренняя ошибка'], 500);
+
+            $this->json($rows);
+            return;
+        } catch (\Throwable $e) {
+            $this->json(['error' => 'Внутренняя ошибка'], 500);
+            return;
         }
     }
+
+    // ---- HTML ----
+    header_remove('Content-Type');
+    header('Content-Type: text/html; charset=utf-8');
+    readfile(__DIR__ . '/../../public/district.html');
+}
+
 
     // POST /api/districts
     public function store(): void

@@ -14,13 +14,17 @@ class DistrictRepository implements DistrictRepositoryInterface
         return $st->fetchAll();
     }
 
-    public function find(int $id): array
+    public function find(int $district): array
     {
-        $st = $this->pdo->prepare("SELECT * FROM districts WHERE id=? AND deleted_at IS NULL");
-        $st->execute([$id]);
-        $row = $st->fetch();
-        if (!$row) throw new \RuntimeException('District not found');
-        return $row;
+        $st = $this->pdo->prepare("
+        SELECT street, house
+        FROM districts
+        WHERE district = ? AND deleted_at IS NULL
+        ORDER BY id
+    ");
+    $st->execute([$district]);
+
+    return $st->fetchAll();
     }
 
     public function create(array $data): int

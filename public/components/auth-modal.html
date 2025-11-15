@@ -1,0 +1,48 @@
+<div class="modal" id="vote-modal" aria-hidden="true">
+  <div class="modal__backdrop"></div>
+
+  <div class="modal__dialog" role="dialog" aria-modal="true">
+    <button class="modal__close" type="button" aria-label="Закрыть">&times;</button>
+
+    <h2 class="modal__title">Авторизация</h2>
+
+    <form class="modal__form" id="vote-form">
+      <!-- Скрытое поле для id кандидата -->
+      <input type="hidden" name="candidate_id" id="candidate-id">
+
+      <label class="modal__label">
+        ФИО
+        <input class="modal__input" type="text" name="fio" placeholder="Иванов Иван Иванович" required>
+      </label>
+
+      <label class="modal__label">
+        Номер телефона:
+        <input class="modal__input" type="tel" name="phone" placeholder="+7 (___) ___-__-__" required>
+      </label>
+
+      <label class="modal__label">
+        Домашний адрес:
+        <input class="modal__input" type="text" name="address" placeholder="Введите адрес" required>
+      </label>
+
+      <div class="modal__actions">
+        <button type="submit" class="left-side__button">Войти</button>
+      </div>
+    </form>
+
+    <hr class="modal__divider">
+
+    <div class="modal__social-title">Войти с помощью:</div>
+
+    <div class="modal__social-list">
+      <button type="button" class="modal__social-btn">
+        <img src="/assets/icons/max.svg" alt="MAX">
+        <span>MAX</span>
+      </button>
+      <button type="button" class="modal__social-btn">
+        <img src="/assets/icons/vk.svg" alt="Вконтакте">
+        <span>Вконтакте</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -16,7 +16,7 @@ class CandidateRepository implements CandidateRepositoryInterface
                         (SELECT COUNT(*) FROM votes v WHERE v.candidate_id=c.id) AS votes_count
                  FROM candidates c
                  WHERE c.deleted_at IS NULL AND c.district_id = ?
-                 ORDER BY c.id DESC"
+                 ORDER BY c.id ASC"
             );
             $st->execute([$districtId]);
         } else {
@@ -25,7 +25,7 @@ class CandidateRepository implements CandidateRepositoryInterface
                         (SELECT COUNT(*) FROM votes v WHERE v.candidate_id=c.id) AS votes_count
                  FROM candidates c
                  WHERE c.deleted_at IS NULL
-                 ORDER BY c.id DESC"
+                 ORDER BY c.id ASC"
             );
         }
         return $st->fetchAll();
@@ -33,9 +33,9 @@ class CandidateRepository implements CandidateRepositoryInterface
 
         public function first(int $limit = 5): array
     {
-        $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email, d.district_id
+        $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email
                 FROM candidates c
-                JOIN districts d ON d.id = c.district_id
+                -- JOIN districts d ON d.id = c.district_id
                 ORDER BY c.id ASC
                 LIMIT :limit";
         $st = $this->pdo->prepare($sql);

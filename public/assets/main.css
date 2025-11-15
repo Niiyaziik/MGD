@@ -315,7 +315,16 @@ header.bx-shadow {
 /*ÐºÐ¾Ð½ÐµÑ† Ñ…ÐµÐ´ÐµÑ€*/
 /*Ñ‚ÐµÐ»Ð¾ ÑÐ°Ð¹Ñ‚Ð°*/
 .site-body {
-	min-height: 900px;
+  min-height: 900px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 100px;
+  position: relative;
+}
+.site-body_candidate {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -524,7 +533,7 @@ header.bx-shadow {
 
     padding: 7px 10px;
     border-radius: 6px;
-    border: 1px solid #2d81e0;
+    border: none;
     background-color: #2d81e0;
     color: #fff;
     text-decoration: none;
@@ -734,6 +743,24 @@ main .content {
 }
 */
 /*Ð¢Ð°Ð±Ñ‹*/
+#candidates.main_candidates{
+  width: 100%;
+  max-width: 1200px;
+  -webkit-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  transition: all 0.3s;
+  margin-left: 250px;
+  margin-bottom: 50px;
+}
+#candidate.main_candidates{
+  width: 100%;
+  max-width: 1200px;
+  -webkit-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  transition: all 0.3s;
+  margin-left: 50px;
+  margin-bottom: 50px;
+}
 .content-list {
   width: 100%;
   max-width: 1356px;
@@ -787,10 +814,11 @@ main .content {
 
 .content-list__content,
 .my-deputat__content {
-  display: none;
+  display: flex;
   width: 100%;
-  min-height: 520px;
+  min-height: 100px;
   box-sizing: border-box;
+  
 }
 #news.content-list__content {
   justify-content: space-between;
@@ -804,6 +832,16 @@ main .content {
   flex-wrap: wrap;
   min-height: 45px;
   margin-top: 50px;
+  display: flex;
+}
+#candidate.content-list__content {
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  min-height: 45px;
+  margin-top: 50px;
+  display: flex;
+  margin-bottom: 50px;
 }
 
 .my-deputat__content p:last-child a {
@@ -820,6 +858,47 @@ main .content {
   -webkit-transition: all 0.3s;
   -o-transition: all 0.3s;
   transition: all 0.3s;
+}
+.candidate-grid {
+  display: flex;
+  width: 100%;
+  border-collapse: separate;    /* важно */
+  border-spacing: 10px 0;
+}
+.candidate-grid-row{
+  display: flex;
+}
+.candidate-grid-row .candidate-card_photo:first-child {
+	border-left: none;
+}
+.candidate-grid-row .candidate-card_photo:last-child {
+	border-right: none;
+}
+.districts-grid {
+  display: grid;
+  grid-template-columns: repeat(10, auto); /* 10 колонок */
+  row-gap: 16px;
+  column-gap: 32px;
+}
+.district {
+  font-size: 20px;
+  font-weight: 500;
+  text-decoration: none;
+  color: #222;
+}
+.district--active:hover {
+  text-decoration: underline;
+  cursor: pointer;
+  color: #247CCD;
+}
+.district--empty {
+  color: #bbb;          /* нет в БД – делаем бледным */
+  cursor: default;
+  pointer-events: none; /* клик не работает */
+}
+.bounds{
+  font-size: 20px;
+  white-space: pre-line;
 }
 .candidate-list{
   list-style:none; margin:0; padding:0;
@@ -847,12 +926,74 @@ main .content {
   position: relative;
   overflow: hidden;
 }
-.candidate-card__photo{
+.candidates-card__photo{
   width:100%;
-  aspect-ratio: 3 / 4;          /* держим пропорции */
+  aspect-ratio: 3 / 4;
   object-fit:cover;
   border-radius:12px;
   display:block;
+}
+.candidate-card_photo{
+	display: flex;	
+  flex: 0 0 20%;
+	width: 20%;
+  object-fit: cover;
+	vertical-align: top;
+	padding: 0;
+}
+.candidate-photo{
+	width: 100%;
+  height: 100%;        
+  object-fit: cover;   
+  object-position: center;  
+  display: block;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+}
+.candidate-contacts {
+  background: #fff;  
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  /* display: table-cell;	 */
+	width: 30%;
+	vertical-align: top;
+	padding: 20px 25px;
+  display: flex; 
+  flex: 0 0 30%;             /* ВАЖНО: делает колонку живой */
+  flex-direction: column;     /* содержимое сверху вниз */
+  justify-content: flex-start;
+  position: relative;
+}
+.candidate-contacts__title,
+.candidate-description__title {
+  margin: 0 0 20px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #000;
+}
+.candidate-contacts__list {
+    list-style: none;
+    margin: 20px;
+    padding: 0;
+}
+.candidate-contacts__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.candidate-contacts__icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+}
+.candidate-description {
+  background: #fff;
+  display: flex;	
+  flex: 0 0 30%;
+	width: 50%;
+  padding: 20px 25px;
+	vertical-align: top;
+
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
 }
 .candidate-card__body {
   padding: 18px 16px 22px;
@@ -921,12 +1062,43 @@ main .content {
   color: #000;
   border: 1px solid #0069d9;
 }
+.vote-btn__candidate{
+  position: absolute;
+  margin-top: auto;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 100;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #0069d9;
+  color: #fff;
+  opacity: 0;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
 .content-list__content:first-child {
   display: block;
 }
 .content-list__title {
   font-weight: bold;
   font-size: 30px;
+}
+.content-list__candidates_title {
+  font-weight: bold;
+  color: #000;
+  font-size: 35px;
+  width: 60%;
+}
+.content-list__districts_title {
+  font-weight: bold;
+  color: #000;
+  font-size: 35px;
+  width: 60%;
+  margin-bottom: 50px;
 }
 .news-cats {
 	display: flex;
@@ -1089,6 +1261,38 @@ main .content {
 .bx-newslist-block .btn:hover {
 	background-color: #000000;
 	border: 1px solid #000000;
+}
+.all-candidates-list {
+  color: #247CCD;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  font-size: 26px;
+  color: #247CCD;
+  margin-bottom: 20px;
+}
+.all-candidates-list a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #247CCD;
+  text-decoration: none;
+  transition: all .3s;
+  position: relative;
+}
+ .all-candidates-list a:hover {
+  text-decoration: underline;
+}
+.all-candidates-list a::after{
+  content: url(https://ugd.ru/local/templates/ugd/img/blocks/arrow-blue.png);
+  margin-left: 20px;
+  transition: all .3s;
 }
 .all-news-list {
   color: #247CCD;
@@ -1295,7 +1499,17 @@ main .content {
   line-height: 36px;
   color: #247CCD;
 }
-
+.input_district{
+flex:1;
+max-width:250px;
+height: 40px;
+padding:6px 10px;
+border:1px solid #ccd3da;
+background-color: #d4d4d8d6;
+border-radius:3px;
+outline:none;
+font-size:14px;
+}
 input[type=range] {
   -webkit-appearance: none;
   margin: 18px 0;
@@ -3337,84 +3551,139 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 
-/*ÐšÐ¾Ð½ÐµÑ† Ñ„ÑƒÑ‚ÐµÑ€Ð°*/
-/* ÐœÐ¾Ð´Ð°Ð»ÑŒÐ½Ñ‹Ð¹ (Ñ„Ð¾Ð½) */
 .modal {
-  display: none;
-  /* Ð¡ÐºÑ€Ñ‹Ñ‚Ð¾ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ */
-  position: fixed;
-  /* ÐžÑÑ‚Ð°Ð²Ð°Ñ‚ÑŒÑÑ Ð½Ð° Ð¼ÐµÑÑ‚Ðµ */
-  z-index: 1;
-  /* Ð¡Ð¸Ð´ÐµÑ‚ÑŒ Ð½Ð° Ð²ÐµÑ€ÑˆÐ¸Ð½Ðµ */
-  padding-top: 20px;
-  /* Ð Ð°ÑÐ¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ ÐºÐ¾Ñ€Ð¾Ð±ÐºÐ¸ */
-  left: 0;
-  top: 130px;
-  width: 100%;
-  /* ÐŸÐ¾Ð»Ð½Ð°Ñ ÑˆÐ¸Ñ€Ð¸Ð½Ð° */
-  height: 100%;
-  /* ÐŸÐ¾Ð»Ð½Ð°Ñ Ð²Ñ‹ÑÐ¾Ñ‚Ð° */
-  overflow: auto;
-  /* Ð’ÐºÐ»ÑŽÑ‡Ð¸Ñ‚Ðµ Ð¿Ñ€Ð¾ÐºÑ€ÑƒÑ‚ÐºÑƒ, ÐµÑÐ»Ð¸ ÑÑ‚Ð¾ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð¾ */
-  background-color: black;
-  /* Ð¦Ð²ÐµÑ‚ Ð·Ð°Ð¿Ð°ÑÐ½Ð¾Ð¹ Ð²Ð°Ñ€Ð¸Ð°Ð½Ñ‚  */
-  background-color: rgba(0, 0, 0, 0.4);
-  /*Ð§ÐµÑ€Ð½Ñ‹Ð¹ Ñ Ð½ÐµÐ¿Ñ€Ð¾Ð·Ñ€Ð°Ñ‡Ð½Ð¾ÑÑ‚ÑŒÑŽ */
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-/* ÐœÐ¾Ð´Ð°Ð»ÑŒÐ½Ð¾Ðµ ÑÐ¾Ð´ÐµÑ€Ð¶Ð°Ð½Ð¸Ðµ */
-.modal-content {
-  position: relative;
-  background-color: #ffffff;
-  margin: auto;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 600px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: flex-start;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+.modal--open {
+    display: flex;
 }
 
-.modal-content h2 {
-  margin: 20px 0px;
-  -webkit-margin-before: 20px;
-          margin-block-start: 20px;
-  -webkit-margin-after: 0px;
-          margin-block-end: 0px;
+.modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
 }
 
-.modal-content form {
-  width: 90%;
-  margin-top: 45px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: flex-start;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+.modal__dialog {
+    position: relative;
+    background: #ffffff;
+    max-width: 480px;
+    width: 100%;
+    padding: 32px 40px 28px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    z-index: 1;
+    height: 80%;
 }
 
-.modal-content form button {
-  -ms-flex-item-align: center;
-      -ms-grid-row-align: center;
-      align-self: center;
+.modal__close {
+    position: absolute;
+    top: 10px;
+    right: 16px;
+    border: none;
+    background: none;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal__title {
+    font-size: 32px;
+    margin: 0 0 24px;
+    color: #000;
+}
+
+.modal__label {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 20px;
+    color: #615f5f;
+}
+
+.modal__input {
+    margin-top: 6px;
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 3px;
+    border: 1px solid #dde3ea;
+    background-color: #f5f8fc;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal__input:focus {
+    outline: none;
+    border-color: #1f6ad5;
+}
+
+.modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.modal__submit {
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    background-color: #1f6ad5;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.modal__submit:hover {
+    background-color: #1452a3;
+}
+
+.modal__divider {
+    margin: 24px 0 18px;
+    border: none;
+    border-top: 1px solid #e3e6eb;
+}
+
+.modal__social-title {
+    font-size: 25px;
+    font-weight: 700;
+    color: #1f6ad5;
+    margin-bottom: 10px;
+}
+
+.modal__social-list {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal__social-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.modal__social-btn img {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+}
+
+.modal__social-btn span {
+    font-size: 13px;
+}
+
+.modal__text {
+    font-size: 16px;
+    margin: 0 0 18px;
 }
 
 #my_form_message {
@@ -3951,8 +4220,9 @@ div.modern-page-navigation {
   .head-block__list {
     max-width: 910px;
   }
-
-
+  .candidate-grid {
+    grid-template-columns: 1fr;
+  }
   .main-slider {
     max-width: 1100px;
   }
@@ -4614,6 +4884,7 @@ div.modern-page-navigation {
     margin-left: 20px;
   }
 
+  
   .content-list__tab button,
 	.my-deputat__tab button {
     margin: 10px;
@@ -5071,6 +5342,9 @@ div.modern-page-navigation {
   }
   .content-list__title {
     margin-left: 0px;
+  }
+  .content-list__candidates_title {
+  /* margin-left: 0px; */
   }
   .news-list {
     margin-left: 0px;

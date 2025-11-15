@@ -1,13 +1,51 @@
 <?php
 namespace App\Controller;
 
-use App\Service\CandidateService;
+use App\Repository\Contract\CandidateRepositoryInterface;
 use DomainException;
 use Throwable;
 
 class CandidateController extends BaseController
 {
-    public function __construct(private CandidateService $candidates) {}
+    public function __construct(private CandidateRepositoryInterface $candidates) {}
+
+    public function index(): void
+    {
+        $json = (isset($_GET['format']) && $_GET['format'] === 'json')
+              || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+
+        if ($json) {
+            $all   = ($_GET['all'] ?? '') === '1';
+            $limit = (int)($_GET['limit'] ?? 5);
+            $data  = $all ? $this->candidates->all() : $this->candidates->first($limit);
+            $this->json($data);
+            return;
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+        readfile(__DIR__ . '/../../public/candidates.html');
+    }
+
+    public function show(): void
+    {
+        $wantsJson = (($_GET['format'] ?? '') === 'json') ||
+                 (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+                 
+        $id = (int)($_GET['id'] ?? 0);
+
+        if ($wantsJson) {
+        if ($id <= 0) { http_response_code(400); echo json_encode(['error'=>'bad id']); return; }
+        $c = $this->candidates->find($id);
+        if (!$c) { http_response_code(404); echo json_encode(['error'=>'not found']); return; }
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($c, JSON_UNESCAPED_UNICODE);
+        return;
+        }
+
+        header_remove('Content-Type');
+        header('Content-Type: text/html; charset=utf-8');
+        readfile(__DIR__ . '/../../public/candidate.html');
+    }
 
     // POST /api/candidates
     public function store(): void
