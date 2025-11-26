@@ -17,15 +17,25 @@ $router->get('/', function () {
 
 // Округа
 $router->get('/districts', [\App\Controller\DistrictController::class, 'index']);   // список
+$router->get('/districts/admin', [\App\Controller\DistrictController::class, 'indexAdmin']);   // список
 $router->get('/district', [\App\Controller\DistrictController::class, 'show']); // просмотр
+$router->get('/district/admin/{id}', [\App\Controller\DistrictController::class, 'showAdmin']); // просмотр
 $router->post('/districts', [\App\Controller\DistrictController::class, 'store']);  // создание
 $router->post('/districts/{id}/update', [\App\Controller\DistrictController::class, 'update']);
 $router->post('/districts/{id}/delete', [\App\Controller\DistrictController::class, 'destroy']);
+$router->post('/district/{district}/streets', [\App\Controller\DistrictController::class, 'storeStreet']);
+$router->put('/district/{district}/streets', [\App\Controller\DistrictController::class, 'updateStreet']);
+$router->post('/district/{district}/houses',  [\App\Controller\DistrictController::class, 'storeHouse']);
+$router->put('/district/{district}/houses',  [\App\Controller\DistrictController::class, 'updateHouse']);
+$router->delete('/district/{district}/houses',  [\App\Controller\DistrictController::class, 'deleteHouse']);
 
 // Кандидаты
 $router->get('/candidates', [\App\Controller\CandidateController::class, 'index']);
+$router->get('/candidates/admin', [\App\Controller\CandidateController::class, 'indexAdmin']);
+$router->get('/candidate/add', [\App\Controller\CandidateController::class, 'showAdd']);
 $router->get('/candidate', [\App\Controller\CandidateController::class, 'show']);
 $router->post('/candidates', [\App\Controller\CandidateController::class, 'store']);
+$router->get('/candidates/{id}/edit', [\App\Controller\CandidateController::class, 'edit']);
 $router->post('/candidates/{id}/update', [\App\Controller\CandidateController::class, 'update']);
 $router->post('/candidates/{id}/delete', [\App\Controller\CandidateController::class, 'destroy']);
 
@@ -43,6 +53,8 @@ $router->post('/votes', [\App\Controller\VoteController::class, 'store']); // п
 $router->get('/admin/login', [\App\Controller\AdminController::class, 'loginForm']);
 $router->post('/admin/login', [\App\Controller\AdminController::class, 'login']);
 $router->post('/admin/logout', [\App\Controller\AdminController::class, 'logout']);
+
+error_log('FRONT CONTROLLER: ' . $_SERVER['REQUEST_METHOD'] . ' ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
 // ---------- Диспетчер ----------
 $router->dispatch($_SERVER['REQUEST_METHOD'], parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));

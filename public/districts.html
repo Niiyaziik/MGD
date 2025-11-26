@@ -1,142 +1,177 @@
 <!doctype html>
 <html lang="ru">
 <link rel="stylesheet" href="assets/main.css" />
+
 <body>
-<div>
-<div class="site-body">
-    <div class="left-side">
-        <a href="/" class="logo-block__link" rel="noopener">
-            <img class="logo-block__image" src="https://ugd.ru/local/templates/ugd/img/logo.png" alt="25 лет служим городу"
-                 title="25 лет служим городу">
-        </a>
+    <div>
+        <div class="site-body">
+            <div class="left-side">
+                <a href="/" class="logo-block__link" rel="noopener">
+                    <img class="logo-block__image" src="https://ugd.ru/local/templates/ugd/img/logo.png"
+                        alt="25 лет служим городу" title="25 лет служим городу">
+                </a>
 
 
-        <div class="left-side__soc">
-            <a class="head-block__vk" href="https://vk.com/ulduma" target="_blank" ></a>
-            <a class="head-block__telegram" href="https://t.me/ugd73" target="_blank" rel="noopener"></a>
-            <a class="head-block__email" href="mailto:duma@ugd.ru" rel="noopener"></a>
-            <a class="head-block__ok" href="https://ok.ru/group/70000000957032" target="_blank" rel="noopener"></a>
-            <a class="head-block__telephone" href="tel:+78422413800" rel="noopener"></a>
+                <div class="left-side__soc">
+                    <a class="head-block__vk" href="https://vk.com/ulduma" target="_blank"></a>
+                    <a class="head-block__telegram" href="https://t.me/ugd73" target="_blank" rel="noopener"></a>
+                    <a class="head-block__email" href="mailto:duma@ugd.ru" rel="noopener"></a>
+                    <a class="head-block__ok" href="https://ok.ru/group/70000000957032" target="_blank"
+                        rel="noopener"></a>
+                    <a class="head-block__telephone" href="tel:+78422413800" rel="noopener"></a>
 
+                </div>
+                <nav class="left-side__navigation">
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+
+                        <li><a href="/candidates">Кандидаты</a></li>
+
+                        <li><a href="/districts">Округа</a></li>
+
+                        <li style="display: none">Округа</li>
+                    </ul>
+                    <button class="left-side__button" type="button">Вход для администратора</button>
+                </nav>
+            </div>
+            <main id="candidates" class="main_candidates">
+                <div id="candidates" class="content-list__content"
+                    style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                    <h2 class="content-list__districts_title">Округа</h2>
+                </div>
+                <div class="districts-grid">
+
+                </div>
+
+                <script>
+                    (async function () {
+                        const grid = document.querySelector('.districts-grid');
+                        if (!grid) return;
+                        // тянем округа из контроллера: /districts?format=json
+                        const res = await fetch('/districts?format=json');
+                        const data = await res.json();   // ожидаем массив округов
+
+                        // индекс по id для удобства
+                        const byDistrict = {};
+                        data.forEach(d => {
+                            const num = Number(d.district); // ВАЖНО!
+                            if (!Number.isNaN(num)) byDistrict[num] = d;
+                        });
+
+                        // рисуем Округ 1..40
+                        for (let i = 1; i <= 40; i++) {
+                            const d = byDistrict[i];
+
+                            const a = document.createElement('a');
+                            a.textContent = `Округ ${i}`;
+                            a.classList.add('district');
+
+                            if (d) {
+                                // округ есть в БД → активная ссылка
+                                a.classList.add('district--active');
+                                a.href = `/district?district=${i}`;   // или /district.php?id=${i} — как у тебя заведено
+                            } else {
+                                // округа нет в БД → «пустой» (но всё равно показываем)
+                                a.classList.add('district--empty');
+                                a.href = '#';
+                                a.setAttribute('aria-disabled', 'true');
+                            }
+
+                            grid.appendChild(a);
+                        }
+                    })();
+                </script>
+            </main>
         </div>
-        <nav class="left-side__navigation">
-            <ul>
-                <li><a href="/">Главная</a></li>
 
-                <li><a href="/candidates">Кандидаты</a></li>
+        <footer class="footer">
 
-                <li><a href="/districts">Округа</a></li>
-
-                <li style="display: none">Округа</li>
-            </ul>
-            <button class="left-side__button" type="button">Вход для администратора</button>
-        </nav>
-    </div>
-    <main id="candidates" class="main_candidates">
-        <div id="candidates" class="content-list__content"
-             style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-            <h2 class="content-list__districts_title">Округа</h2>
-        </div>
-        <div class="districts-grid">
-
-        </div>
-
-        <script>
-            (async function() {
-            const grid = document.querySelector('.districts-grid');
-            if (!grid) return;
-                // тянем округа из контроллера: /districts?format=json
-            const res  = await fetch('/districts?format=json');
-            const data = await res.json();   // ожидаем массив округов
-
-            // индекс по id для удобства
-            const byDistrict = {};
-            data.forEach(d => {
-                const num = Number(d.district); // ВАЖНО!
-                if (!Number.isNaN(num)) byDistrict[num] = d;
-            });
-
-            // рисуем Округ 1..40
-            for (let i = 1; i <= 40; i++) {
-                const d = byDistrict[i];
-
-                const a = document.createElement('a');
-                a.textContent = `Округ ${i}`;
-                a.classList.add('district');
-
-                if (d) {
-                // округ есть в БД → активная ссылка
-                a.classList.add('district--active');
-                a.href = `/district?district=${i}`;   // или /district.php?id=${i} — как у тебя заведено
-                } else {
-                // округа нет в БД → «пустой» (но всё равно показываем)
-                a.classList.add('district--empty');
-                a.href = '#';
-                a.setAttribute('aria-disabled', 'true');
-                }
-
-                grid.appendChild(a);
-            }
-            })();
-        </script>
-    </main>
-</div>
-
-<footer class="footer" >
-
-    <div class="footer__body">
-        <ul class="footer__menu">
-            <li class="footer__menu-item"><span class="title">О думе</span> <img src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title=""></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/about/" onclick="openTab2(event, 'history')">История</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#structure" onclick="openTab2(event, 'structure')">Структура</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#apparat" onclick="openTab2(event, 'apparat')">Аппарат УГД</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#reglament" onclick="openTab2(event, 'reglament')">Регламент</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#service" onclick="openTab2(event, 'service')">Муниципальная служба</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/main_news/">Новости</a></li>
-            <br>
-            <li class="footer__menu-item"><span class="title">Депутаты</span></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/dep/">Состав думы VI созыва</a></li>
-            <!--<li class="footer__menu-item"><a class="footer__menu-link" href="#">Благодарности депутатам</a></li>-->
-        </ul>
-        <ul class="footer__menu">
-            <li class="footer__menu-item"><span class="title">Деятельность</span> <img src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title=""></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#solutions">Решения</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#resolutions">Постановления</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#glava-gor-resolutions">Постановления Главы города</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#glava-gor-orders">Распоряжения Главы города</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#appealnpa">Порядок обжалования НПА УГД</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#other-documents">Документы</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#ocherednoe-zasedanie">Очередное заседание</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#plan-raboty-2022">План работы на I полугодие 2023 г.</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#plan_raboty2">План работы на октябрь 2023 г.</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#korrupt">Противодействие коррупции</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#projecty_documentov">Проекты документов</a></li>
-        </ul>
-        <ul class="footer__menu">
-            <li class="footer__menu-item"><span class="title">Приемная</span> <img src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title=""></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/reception/">Работа с обращениями граждан</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/reception/#graphik">График приема избирателей депутатами УГД в общественной приёмной</a></li>
-            <br>
-            <li class="footer__menu-item"><span class="title">Комитеты</span></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/">Состав комитетов</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/#rabota-komitetov">Работа комитетов</a></li>
-            <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/#arhiv-povestok">Архив повесток заседаний комитетов</a></li>
-        </ul>
-        <ul class="footer_contact_all">
-            <p class="footer_copyrigt">© 2025 Ульяновская Городская Дума</p>
-            <p class="footer_addr">ул. Кузнецова, 7</p>
-            <p class="footer_phone">Телефон: (8422) 41-38-00</p>
-            <p class="footer_mail">e-mail: <a href="mailto:duma@ugd.ru">duma@ugd.ru</a></p>
-            <p class="footer_personal"><a target="_blank" href="/upload/politica-2018.pdf">Политика в отношении обработки персональных данных</a></p>
-        </ul>
-        <!--
+            <div class="footer__body">
+                <ul class="footer__menu">
+                    <li class="footer__menu-item"><span class="title">О думе</span> <img
+                            src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title="">
+                    </li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/about/"
+                            onclick="openTab2(event, 'history')">История</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#structure"
+                            onclick="openTab2(event, 'structure')">Структура</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#apparat"
+                            onclick="openTab2(event, 'apparat')">Аппарат УГД</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#reglament"
+                            onclick="openTab2(event, 'reglament')">Регламент</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#service"
+                            onclick="openTab2(event, 'service')">Муниципальная служба</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/main_news/">Новости</a></li>
+                    <br>
+                    <li class="footer__menu-item"><span class="title">Депутаты</span></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/dep/">Состав думы VI созыва</a>
+                    </li>
+                    <!--<li class="footer__menu-item"><a class="footer__menu-link" href="#">Благодарности депутатам</a></li>-->
+                </ul>
+                <ul class="footer__menu">
+                    <li class="footer__menu-item"><span class="title">Деятельность</span> <img
+                            src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title="">
+                    </li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#solutions">Решения</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link"
+                            href="/docs/#resolutions">Постановления</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link"
+                            href="/docs/#glava-gor-resolutions">Постановления Главы города</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link"
+                            href="/docs/#glava-gor-orders">Распоряжения Главы города</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#appealnpa">Порядок
+                            обжалования НПА УГД</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link"
+                            href="/docs/#other-documents">Документы</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link"
+                            href="/docs/#ocherednoe-zasedanie">Очередное заседание</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#plan-raboty-2022">План
+                            работы на I полугодие 2023 г.</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#plan_raboty2">План работы на
+                            октябрь 2023 г.</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/about/#korrupt">Противодействие
+                            коррупции</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#projecty_documentov">Проекты
+                            документов</a></li>
+                </ul>
+                <ul class="footer__menu">
+                    <li class="footer__menu-item"><span class="title">Приемная</span> <img
+                            src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title="">
+                    </li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/reception/">Работа с обращениями
+                            граждан</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/reception/#graphik">График приема
+                            избирателей депутатами УГД в общественной приёмной</a></li>
+                    <br>
+                    <li class="footer__menu-item"><span class="title">Комитеты</span></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/">Состав комитетов</a>
+                    </li>
+                    <li class="footer__menu-item"><a class="footer__menu-link"
+                            href="/committees/#rabota-komitetov">Работа комитетов</a></li>
+                    <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/#arhiv-povestok">Архив
+                            повесток заседаний комитетов</a></li>
+                </ul>
+                <ul class="footer_contact_all">
+                    <p class="footer_copyrigt">© 2025 Ульяновская Городская Дума</p>
+                    <p class="footer_addr">ул. Кузнецова, 7</p>
+                    <p class="footer_phone">Телефон: (8422) 41-38-00</p>
+                    <p class="footer_mail">e-mail: <a href="mailto:duma@ugd.ru">duma@ugd.ru</a></p>
+                    <p class="footer_personal"><a target="_blank" href="/upload/politica-2018.pdf">Политика в отношении
+                            обработки персональных данных</a></p>
+                </ul>
+                <!--
         <ul class="footer__menu">
             <li class="footer__menu-item"><span class="title">О городе</span> <img src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title=""></li>
         </ul>
     -->
-    </div>
-</footer>
-<div class="footer-copyright-design"><div class="container">Разработано в <a href="http://agatech.ru/" target="_blank" title="agatech.ru">AGATECH</a></div></div>
+            </div>
+        </footer>
+        <div class="footer-copyright-design">
+            <div class="container">Разработано в <a href="http://agatech.ru/" target="_blank"
+                    title="agatech.ru">AGATECH</a></div>
+        </div>
+        <script src="./js/load-modals.js"></script>
+        <script src="./js/modals.js"></script>
 </body>
-</html>
 
+</html>

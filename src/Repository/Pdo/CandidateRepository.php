@@ -31,7 +31,7 @@ class CandidateRepository implements CandidateRepositoryInterface
         return $st->fetchAll();
     }
 
-        public function first(int $limit = 5): array
+    public function first(int $limit = 5): array
     {
         $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email
                 FROM candidates c
@@ -58,16 +58,29 @@ class CandidateRepository implements CandidateRepositoryInterface
         return $row;
     }
 
+    public function findById(int $id): ?array
+    {
+        $st = $this->pdo->prepare("SELECT * FROM candidates WHERE id = ?");
+        $st->execute([$id]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
     public function create(array $data): int
     {
         $st = $this->pdo->prepare(
-            "INSERT INTO candidates(name,bio,district_id,photo) VALUES(?,?,?,?)"
+            "INSERT INTO candidates(surname, name, patronymic, phone, district, photo, email, description) VALUES(?,?,?,?,?,?,?,?)"
         );
         $st->execute([
+            $data['surname'] ?? null,
             $data['name'] ?? null,
-            $data['bio'] ?? null,
-            $data['district_id'] ?? null,
+            $data['patronymic'] ?? null,
+            $data['phone'] ?? null,
+            $data['district'] ?? null,
             $data['photo'] ?? null,
+            $data['email'] ?? null,
+            $data['description'] ?? null,
         ]);
         return (int)$this->pdo->lastInsertId();
     }
@@ -75,14 +88,18 @@ class CandidateRepository implements CandidateRepositoryInterface
     public function update(int $id, array $data): void
     {
         $st = $this->pdo->prepare(
-            "UPDATE candidates SET name=?, bio=?, district_id=?, photo=?, updated_at=NOW()
+            "UPDATE candidates SET surname=?, name=?, patronymic=?, phone=?, district=?, photo=?, email=?, description=?, updated_at=NOW()
              WHERE id=? AND deleted_at IS NULL"
         );
         $st->execute([
+            $data['surname'] ?? null,
             $data['name'] ?? null,
-            $data['bio'] ?? null,
-            $data['district_id'] ?? null,
+            $data['patronymic'] ?? null,
+            $data['phone'] ?? null,
+            $data['district'] ?? null,
             $data['photo'] ?? null,
+            $data['email'] ?? null,
+            $data['description'] ?? null,
             $id
         ]);
     }

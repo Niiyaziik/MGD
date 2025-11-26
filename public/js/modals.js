@@ -3,25 +3,35 @@ document.addEventListener("DOMContentLoaded", () => {
     return parent.querySelector(selector);
   }
 
-  let authModal    = null;
+  let authModal = null;
   let successModal = null;
-  let hiddenInput  = null;
-  let form         = null;
-  let confirmBtn   = null;
+  let adminModal = null;
+  let hiddenInput = null;
+  let form = null;
+  let confirmBtn = null;
 
   function openModal(modal) {
-    if (!modal) return;
+    console.log("Проверка модалки:", modal);
+    if (!modal) {
+      console.warn("openModal: modal = null");
+      return;
+    }
     modal.classList.add("modal--open");
+    console.log("Открыли модалку:", modal.id);
   }
 
   function closeModal(modal) {
-    if (!modal) return;
+    if (!modal) {
+      console.warn("closeModal: modal = null");
+      return;
+    }
     modal.classList.remove("modal--open");
+    console.log("Закрыли модалку:", modal.id);
   }
 
   // 🔹 ДЕЛЕГИРОВАНИЕ КЛИКОВ ПО КНОПКАМ "Проголосовать"
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".vote-btn");
+    const btn = e.target.closest(".vote-btn, .vote-btn-candidate");
     if (!btn) return;
 
     // всегда отменяем переход по href="#"
@@ -37,34 +47,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // пробуем открыть модалку (если она уже успела загрузиться)
     openModal(authModal);
+    console.log("Клик по Проголосовать");
   });
 
   document.addEventListener("click", (e) => {
     // открыть модалку администратора
-        if (e.target.closest(".left-side__button")) {
-            e.preventDefault();
-            openModal("modal-admin");
-        }
+    const adminBtn = e.target.closest(".left-side__button");
+    const insideModal = e.target.closest(".modal"); // <- клик внутри модалки?
 
-        // закрытие
-        if (e.target.hasAttribute("data-close-modal")) {
-            closeModal(e.target.closest(".modal").id);
-        }
-    });
-    function openModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.add("open");
+    if (adminBtn && !insideModal) {
+      // срабатывает ТОЛЬКО если нажали кнопку админа СНАРУЖИ модалок
+      e.preventDefault();
+
+      // если ещё не нашли модалку администратора — попробуем найти
+      if (!adminModal) {
+        adminModal = qs("#modal-admin");
+      }
+
+      openModal(adminModal);
+      return;
     }
 
-    function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.remove("open");
+    // закрытие по data-close-modal
+    if (e.target.hasAttribute("data-close-modal")) {
+      const modal = e.target.closest(".modal"); // передаём элемент, а не id
+      closeModal(modal);
     }
+  });
 
   // 🔹 Ждём, пока модалки подгрузятся load-modals.js
   const waitForModals = setInterval(() => {
-    authModal    = qs('#vote-modal');
-    successModal = qs('#vote-success-modal');
+    authModal = qs("#vote-modal");
+    successModal = qs("#vote-success-modal");
+    adminModal = qs("#modal-admin"); // тоже подцепим, если уже есть
 
     if (!authModal || !successModal) return;
 
@@ -73,28 +88,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 50);
 
   function initModals() {
-    const authBackdrop    = qs('.modal__backdrop', authModal);
-    const authCloseBtn    = qs('.modal__close', authModal);
-    const successBackdrop = qs('.modal__backdrop', successModal);
-    const successCloseBtn = qs('.modal__close', successModal);
+    const authBackdrop = qs(".modal__backdrop", authModal);
+    const successBackdrop = qs(".modal__backdrop", successModal);
+    const adminBackdrop = adminModal ? qs(".modal__backdrop", adminModal) : null;
 
-    hiddenInput = qs('#candidate-id');
-    form        = qs('#vote-form');
-    confirmBtn  = qs('#vote-confirm-btn');
+    hiddenInput = qs("#candidate-id");
+    form = qs("#vote-form");
+    confirmBtn = qs("#vote-confirm-btn");
 
-    // закрытие модалки авторизации
-    authCloseBtn.addEventListener("click", () => closeModal(authModal));
-    authBackdrop.addEventListener("click", () => closeModal(authModal));
+    const adminForm = qs("#admin-login-form");
 
-    // закрытие второй модалки
-    successCloseBtn.addEventListener("click", () => closeModal(successModal));
-    successBackdrop.addEventListener("click", () => closeModal(successModal));
+    // Если модалка администратора есть — вешаем обработчик
+    if (adminForm) {
+      adminForm.addEventListener("submit", (e) => {
+        e.preventDefault(); // отключаем стандартную отправку формы
+
+        console.log("Вход администратора...");
+
+        // Закрываем модалку (необязательно, но красиво)
+        if (adminModal) closeModal(adminModal);
+
+        // ПЕРЕХОД НА candidate-admin.html
+        window.location.href = "/candidates/admin";
+      });
+    }
+
+    if (authBackdrop) {
+      authBackdrop.addEventListener("click", () => closeModal(authModal));
+    }
+
+    if (successBackdrop) {
+      successBackdrop.addEventListener("click", () => closeModal(successModal));
+    }
+
+    if (adminBackdrop) {
+      adminBackdrop.addEventListener("click", () => closeModal(adminModal));
+    }
 
     // ESC
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         closeModal(authModal);
         closeModal(successModal);
+        if (adminModal) closeModal(adminModal);
       }
     });
 

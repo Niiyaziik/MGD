@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="ru">
-<link rel="stylesheet" href="assets/main.css" />
+<link rel="stylesheet" href="/assets/main.css" />
 
 <body>
+    <div id="alert-container"></div>
     <div>
-        <div class="site-body">
+        <div class="site-body_candidate">
             <div class="left-side">
                 <a href="/" class="logo-block__link" rel="noopener">
                     <img class="logo-block__image" src="https://ugd.ru/local/templates/ugd/img/logo.png"
@@ -25,91 +26,87 @@
                     <ul>
                         <li><a href="/">Главная</a></li>
 
-                        <li><a href="/candidates">Кандидаты</a></li>
+                        <li><a href="/candidates/admin">Кандидаты</a></li>
 
-                        <li><a href="/districts">Округа</a></li>
+                        <li><a href="/districts/admin">Округа</a></li>
 
-                        <li style="display: none">Округа</li>
+                        <li><a href="/votes">Проголосовавшие</a></li>
+
+                        <li style="display: none;">Проголосовавшие</li>
                     </ul>
-                    <button class="left-side__button" type="button">Вход для администратора</button>
                 </nav>
             </div>
             <main id="candidates" class="main_candidates">
-                <div id="candidates" class="content-list__content"
-                    style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-                    <h2 id="district-title" class="content-list__districts_title">Границы округа </h2>
-                    <div class="all-news-list">
-                        <a href="/districts">Все округа</a>
+                <form id="candidate-add-form" class="candidate-add-form"
+                    action="/candidates/<?= $candidate['id'] ?>/update" method="POST" enctype="multipart/form-data">
+                    <div id="candidates" class="content-list__content"
+                        style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                        <h2 class="content-list__candidates_title">
+                            <input type="text" name="full_name" class="input_add_fio"
+                                value="<?= htmlspecialchars($candidate['surname'].' '.$candidate['name'].' '.$candidate['patronymic']) ?>"
+                                placeholder="Введите ФИО">
+                        </h2>
+                        <div class="all-news-list">
+                            <a href="/candidates/admin">Все кандидаты</a>
+                        </div>
                     </div>
-                </div>
+                    <section class="deputat">
+                        <div class="deputat__body">
 
-                <div id="district-bounds" class="bounds">
-                </div>
+                            <div class="photo-column">
+                                <div class="candidate-card_photo">
+                                    <div class="photo-upload" id="photo-upload">
+                                        <img id="photo-preview" class="deputat__image"
+                                            src="<?= $candidate['photo'] ? $candidate['photo'] : '/assets/img/candidates/placeholderAddCandidate.png' ?>"
+                                            alt="Фото кандидата">
+                                        <!-- <button type="button" class="photo-change-btn" id="photo-change-btn">Изменить
+                                            фото</button> -->
+                                    </div>
+                                </div>
+                                <input type="file" id="photo-input" name="photo" accept="image/*" hidden>
+                            </div>
 
-                <script>
-                    document.addEventListener("DOMContentLoaded", async () => {
-                        const params = new URLSearchParams(window.location.search);
-                        const district = Number(params.get("district"));
+                            <div class="deputat__contacts">
+                                <span class="deputat__contacts-title">Контакты</span>
+                                <ul class="deputat__contacts-list">
+                                    <li class="deputat__contacts-district">
+                                        <img class="candidate-contacts__icon"
+                                            src="https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/geo_blue.png"
+                                            alt="">
+                                        <span style="margin-right: 6px;">Округ</span>
+                                        <input type="text" name="address" id="address" class="input_add"
+                                            value="<?= htmlspecialchars($candidate['district']) ?>"
+                                            placeholder="Введите округ">
+                                    </li>
+                                    <li class="deputat__contacts-email">
+                                        <img class="candidate-contacts__icon"
+                                            src="https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/mail_blue.png"
+                                            alt="">
+                                        <input type="email" name="email" class="input_add"
+                                            value="<?= htmlspecialchars($candidate['email']) ?>"
+                                            placeholder="Введите e-mail">
+                                    </li>
+                                    <li class="deputat__contacts-phone">
+                                        <img class="candidate-contacts__icon"
+                                            src="https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/phone_blue.png"
+                                            alt="">
+                                        <input type="text" name="phone" id="phone" class="input_add"
+                                            value="<?= htmlspecialchars($candidate['phone']) ?>"
+                                            placeholder="Введите телефон">
+                                    </li>
+                                </ul>
+                                <button type="submit" class="save-btn-candidate">Сохранить</button>
+                            </div>
 
-                        const titleEl = document.getElementById("district-title");
-                        const boundsEl = document.getElementById("district-bounds");
+                            <div class="deputat__about">
+                                <span class="deputat__about-title">О кандидате</span>
+                                <textarea name="description" class="textarea_description" rows="6"
+                                    placeholder="Введите информацию о кандидате"><?= htmlspecialchars($candidate['description']) ?></textarea>
+                            </div>
 
-                        // 1) Проверка корректности ID
-                        if (!district) {
-                            titleEl.textContent = "Округ не найден";
-                            boundsEl.textContent = "Некорректный параметр id.";
-                            return;
-                        }
-
-                        // 2) Подставляем ID в заголовок
-                        titleEl.textContent = `Границы округа ${district}`;
-
-                        try {
-                            // 3) Запрос данных
-                            const res = await fetch(`/district?format=json&district=${district}`, {
-                                headers: { "Accept": "application/json" }
-                            });
-
-                            if (!res.ok) throw new Error("Ошибка загрузки");
-
-                            const data = await res.json();
-                            console.log(data);
-
-                            if (Array.isArray(data)) {
-
-                                //  Группируем: street → [houses]
-                                const grouped = {};
-
-                                data.forEach(row => {
-                                    const street = row.street || '';
-                                    const house = row.house || '';
-
-                                    if (!grouped[street]) {
-                                        grouped[street] = [];
-                                    }
-                                    if (house) {
-                                        grouped[street].push(house);
-                                    }
-                                });
-
-                                // Формируем строки по одной улице
-                                const lines = Object.entries(grouped).map(([street, houses]) => {
-                                    if (houses.length > 0) {
-                                        return `ул.${street}: ${houses.join(', ')}`;
-                                    } else {
-                                        return `ул.${street}: (нет домов)`;
-                                    }
-                                });
-
-                                boundsEl.textContent = lines.join('\n');
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            boundsEl.textContent = "Ошибка загрузки данных.";
-                        }
-                    });
-
-                </script>
+                        </div>
+                    </section>
+                </form>
             </main>
         </div>
 
@@ -143,17 +140,21 @@
                     </li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#solutions">Решения</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
-                            href="/docs/#resolutions">Постановления</a></li>
+                            href="/docs/#resolutions">Постановления</a>
+                    </li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
                             href="/docs/#glava-gor-resolutions">Постановления Главы города</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
-                            href="/docs/#glava-gor-orders">Распоряжения Главы города</a></li>
+                            href="/docs/#glava-gor-orders">Распоряжения
+                            Главы города</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#appealnpa">Порядок
                             обжалования НПА УГД</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
-                            href="/docs/#other-documents">Документы</a></li>
+                            href="/docs/#other-documents">Документы</a>
+                    </li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
-                            href="/docs/#ocherednoe-zasedanie">Очередное заседание</a></li>
+                            href="/docs/#ocherednoe-zasedanie">Очередное
+                            заседание</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#plan-raboty-2022">План
                             работы на I полугодие 2023 г.</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#plan_raboty2">План работы на
@@ -176,7 +177,8 @@
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/">Состав комитетов</a>
                     </li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
-                            href="/committees/#rabota-komitetov">Работа комитетов</a></li>
+                            href="/committees/#rabota-komitetov">Работа
+                            комитетов</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/committees/#arhiv-povestok">Архив
                             повесток заседаний комитетов</a></li>
                 </ul>
@@ -197,10 +199,15 @@
         </footer>
         <div class="footer-copyright-design">
             <div class="container">Разработано в <a href="http://agatech.ru/" target="_blank"
-                    title="agatech.ru">AGATECH</a></div>
+                    title="agatech.ru">AGATECH</a>
+            </div>
         </div>
-        <script src="./js/load-modals.js"></script>
-        <script src="./js/modals.js"></script>
+        <script src="/js/load-modals.js"></script>
+        <script src="/js/modals.js"></script>
+        <script src="/js/photoDialog.js"></script>
+        <script src="/js/phone.js"></script>
+        <!-- <script src="/js/adress.js"></script> -->
+        <script src="/js/save-candidate.js"></script>
 </body>
 
 </html>

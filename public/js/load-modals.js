@@ -13,4 +13,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     container.innerHTML = authHtml + successHtml + adminHtml;
 
     document.body.appendChild(container);
+    console.log("Модалка загрузилась:");
 });

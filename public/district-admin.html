@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru">
-<link rel="stylesheet" href="assets/main.css" />
+<link rel="stylesheet" href="/assets/main.css" />
 
 <body>
     <div>
@@ -25,91 +25,27 @@
                     <ul>
                         <li><a href="/">Главная</a></li>
 
-                        <li><a href="/candidates">Кандидаты</a></li>
+                        <li><a href="/candidates/admin">Кандидаты</a></li>
 
-                        <li><a href="/districts">Округа</a></li>
+                        <li><a href="/districts/admin">Округа</a></li>
 
-                        <li style="display: none">Округа</li>
+                        <li><a href="/votes">Проголосовавшие</a></li>
+
+                        <li style="display: none;">Проголосовавшие</li>
                     </ul>
-                    <button class="left-side__button" type="button">Вход для администратора</button>
                 </nav>
             </div>
             <main id="candidates" class="main_candidates">
                 <div id="candidates" class="content-list__content"
                     style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-                    <h2 id="district-title" class="content-list__districts_title">Границы округа </h2>
+                    <h2 id="district-title" class="content-list__districts_title">Округ </h2>
                     <div class="all-news-list">
-                        <a href="/districts">Все округа</a>
+                        <a href="/districts/admin">Все округа</a>
                     </div>
                 </div>
 
                 <div id="district-bounds" class="bounds">
                 </div>
-
-                <script>
-                    document.addEventListener("DOMContentLoaded", async () => {
-                        const params = new URLSearchParams(window.location.search);
-                        const district = Number(params.get("district"));
-
-                        const titleEl = document.getElementById("district-title");
-                        const boundsEl = document.getElementById("district-bounds");
-
-                        // 1) Проверка корректности ID
-                        if (!district) {
-                            titleEl.textContent = "Округ не найден";
-                            boundsEl.textContent = "Некорректный параметр id.";
-                            return;
-                        }
-
-                        // 2) Подставляем ID в заголовок
-                        titleEl.textContent = `Границы округа ${district}`;
-
-                        try {
-                            // 3) Запрос данных
-                            const res = await fetch(`/district?format=json&district=${district}`, {
-                                headers: { "Accept": "application/json" }
-                            });
-
-                            if (!res.ok) throw new Error("Ошибка загрузки");
-
-                            const data = await res.json();
-                            console.log(data);
-
-                            if (Array.isArray(data)) {
-
-                                //  Группируем: street → [houses]
-                                const grouped = {};
-
-                                data.forEach(row => {
-                                    const street = row.street || '';
-                                    const house = row.house || '';
-
-                                    if (!grouped[street]) {
-                                        grouped[street] = [];
-                                    }
-                                    if (house) {
-                                        grouped[street].push(house);
-                                    }
-                                });
-
-                                // Формируем строки по одной улице
-                                const lines = Object.entries(grouped).map(([street, houses]) => {
-                                    if (houses.length > 0) {
-                                        return `ул.${street}: ${houses.join(', ')}`;
-                                    } else {
-                                        return `ул.${street}: (нет домов)`;
-                                    }
-                                });
-
-                                boundsEl.textContent = lines.join('\n');
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            boundsEl.textContent = "Ошибка загрузки данных.";
-                        }
-                    });
-
-                </script>
             </main>
         </div>
 
@@ -199,8 +135,7 @@
             <div class="container">Разработано в <a href="http://agatech.ru/" target="_blank"
                     title="agatech.ru">AGATECH</a></div>
         </div>
-        <script src="./js/load-modals.js"></script>
-        <script src="./js/modals.js"></script>
+        <script src="/js/district-table.js"></script>
 </body>
 
 </html>

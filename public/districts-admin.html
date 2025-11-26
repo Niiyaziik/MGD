@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru">
-<link rel="stylesheet" href="assets/main.css" />
+<link rel="stylesheet" href="/assets/main.css" />
 
 <body>
         <div>
@@ -27,125 +27,61 @@
                                         <ul>
                                                 <li><a href="/">Главная</a></li>
 
-                                                <li><a href="/candidates">Кандидаты</a></li>
+                                                <li><a href="/candidates/admin">Кандидаты</a></li>
 
-                                                <li><a href="/districts">Округа</a></li>
+                                                <li><a href="/districts/admin">Округа</a></li>
 
-                                                <li style="display: none">Округа</li>
+                                                <li><a href="/votes">Проголосовавшие</a></li>
+
+                                                <li style="display: none;">Проголосовавшие</li>
                                         </ul>
-                                        <button class="left-side__button" type="button">Вход для администратора</button>
                                 </nav>
                         </div>
                         <main id="candidates" class="main_candidates">
                                 <div id="candidates" class="content-list__content"
                                         style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-                                        <h2 class="content-list__candidates_title">Кандидаты Молодежной городской думы
-                                        </h2>
+                                        <h2 class="content-list__districts_title">Редактировать округа</h2>
+                                </div>
+                                <div class="districts-grid">
+
                                 </div>
 
-                                <div class="district-filter"
-                                        style="display:flex;align-items:center;gap:10px;margin:15px 0;">
-                                        <img src="/assets/icons/filter.svg" alt="Фильтр"
-                                                style="width:20px; height:20px; vertical-align:middle;">
-
-                                        <label for="district-input" style="font-weight:600; color:#858181;">Фильтр по
-                                                округу:</label>
-
-                                        <input type="text" id="district-input" placeholder="Введите адрес"
-                                                class="input_district">
-                                        <button id="district-show-btn" class="search-district__button">Показать</button>
-                                </div>
-                                <ul class="candidate-list">
-                                </ul>
                                 <script>
                                         (async function () {
-                                                const ul = document.querySelector('.candidate-list');
-                                                if (!ul) return;
+                                                const grid = document.querySelector('.districts-grid');
+                                                if (!grid) return;
+                                                // тянем округа из контроллера: /districts?format=json
+                                                const res = await fetch('/districts?format=json');
+                                                const data = await res.json();   // ожидаем массив округов
 
-                                                const districtInput = document.getElementById('district-input');
-                                                const districtBtn = document.getElementById('district-show-btn');
+                                                // индекс по id для удобства
+                                                const byDistrict = {};
+                                                data.forEach(d => {
+                                                        const num = Number(d.district); // ВАЖНО!
+                                                        if (!Number.isNaN(num)) byDistrict[num] = d;
+                                                });
 
-                                                const res = await fetch('/candidates?format=json&all=1');
-                                                const data = await res.json();
-                                                const allCandidates = data;
+                                                // рисуем Округ 1..40
+                                                for (let i = 1; i <= 40; i++) {
+                                                        const d = byDistrict[i];
 
+                                                        const a = document.createElement('a');
+                                                        a.textContent = `Округ ${i}`;
+                                                        a.classList.add('district');
 
-                                                const tpl = (c) => `
-                                                        <li class="candidate-card">
-                                                        <div class="candidate-card__link">
-                                                        <div class="candidate-card__figure">
-                                                                <a href="/candidate?id=${Number(c.id)}">
-                                                                <img
-                                                                        class="candidates-card__photo"
-                                                                        src="${c.photo ? c.photo : '/assets/img/candidates/placeholder.jpeg'}"
-                                                                        alt="${(c.surname || '') + ' ' + (c.name || '') + ' ' + (c.patronymic || '')}">
-                                                                </a>
-                                                                <a class="vote-btn" href="/candidate.php?id=${Number(c.id)}">Проголосовать</a>
-                                                        </div>
-                                                        <a class="candidate-card__body" href="/candidate?id=${Number(c.id)}">
-                                                        <h3 class="candidate-card__name">
-                                                                ${(c.surname || '') + ' ' + (c.name || '')}<br>${(c.patronymic || '')}
-                                                        </h3>
-                                                        <div class="candidate-card__role">Кандидат Молодёжной Думы</div>
-                                                        <div class="candidate-card__district">Округ ${(c.district || '')}</div>
-                                                        <div class="candidate-card__email">${(c.email || '')}</div>
-                                                        </a>
-                                                        </div>
-                                                        </li>`;
-
-                                                function render(list) {
-                                                        ul.innerHTML = list.map(tpl).join('');
-                                                }
-
-                                                // показываем всех при загрузке
-                                                render(allCandidates);
-
-                                                // обработчик фильтра
-                                                function applyFilter() {
-                                                        const raw = districtInput.value.trim();
-
-                                                        // если ничего не введено — показываем всех
-                                                        if (!raw) {
-                                                                render(allCandidates);
-                                                                return;
-                                                        }
-
-                                                        // пробуем вытащить номер из строки (на случай "Округ 5")
-                                                        const num = Number(raw.replace(/[^\d]/g, ''));
-
-                                                        let filtered;
-                                                        if (!Number.isNaN(num) && num !== 0) {
-                                                                // фильтрация по числовому номеру округа
-                                                                filtered = allCandidates.filter(c => Number(c.district) === num);
+                                                        if (d) {
+                                                                // округ есть в БД → активная ссылка
+                                                                a.classList.add('district--active');
+                                                                a.href = `/district/admin/${i}`;   // или /district.php?id=${i} — как у тебя заведено
                                                         } else {
-                                                                // фильтрация по подстроке, если ввели текстом
-                                                                const q = raw.toLowerCase();
-                                                                filtered = allCandidates.filter(c =>
-                                                                        (String(c.district || '')).toLowerCase().includes(q)
-                                                                );
+                                                                // округа нет в БД → «пустой» (но всё равно показываем)
+                                                                a.classList.add('district--empty');
+                                                                a.href = '#';
+                                                                a.setAttribute('aria-disabled', 'true');
                                                         }
 
-                                                        render(filtered);
+                                                        grid.appendChild(a);
                                                 }
-
-                                                // клик по кнопке "Показать"
-                                                districtBtn.addEventListener('click', function (e) {
-                                                        e.preventDefault();
-                                                        applyFilter();
-                                                });
-
-                                                // по Enter в инпуте — тоже фильтруем
-                                                districtInput.addEventListener('keydown', function (e) {
-                                                        if (e.key === 'Enter') {
-                                                                e.preventDefault();
-                                                                applyFilter();
-                                                        }
-                                                });
-                                                districtInput.addEventListener('input', function () {
-                                                        if (!this.value.trim()) {
-                                                                render(allCandidates); // ← вот здесь и происходит сброс
-                                                        }
-                                                });
                                         })();
                                 </script>
                         </main>
@@ -260,8 +196,8 @@
                         <div class="container">Разработано в <a href="http://agatech.ru/" target="_blank"
                                         title="agatech.ru">AGATECH</a></div>
                 </div>
-                <script src="/js/load-modals.js"></script>
-                <script src="/js/modals.js"></script>
+                <script src="./js/load-modals.js"></script>
+                <script src="./js/modals.js"></script>
 </body>
 
 </html>
