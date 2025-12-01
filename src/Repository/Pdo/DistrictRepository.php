@@ -67,8 +67,8 @@ class DistrictRepository implements DistrictRepositoryInterface
     return $st->fetchAll();
     }
 
-    /**
-     * Создать улицу (если ещё нет активной записи в streets).
+    /*
+      Создать улицу (если ещё нет активной записи в streets).
      */
     public function createStreet(int $districtId, string $street): void
     {
@@ -136,8 +136,8 @@ class DistrictRepository implements DistrictRepositoryInterface
         return $st->rowCount();
     }
 
-    /**
-     * Внутренний helper: получить id улицы (создать при необходимости).
+    /*
+     получить id улицы (создать при необходимости).
      */
     private function getOrCreateStreetId(int $districtId, string $street): ?int
     {

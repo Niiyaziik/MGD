@@ -10,28 +10,24 @@ class DistrictController extends BaseController
 {
     public function __construct(private DistrictRepositoryInterface $districts) {}
 
-    // GET /api/districts
     public function index(): void
     {
-    $this->requireMethod('GET');
+        $this->requireMethod('GET');
 
-    // Определяем нужен ли JSON
-    $json = (isset($_GET['format']) && $_GET['format'] === 'json')
-         || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+        $json = (isset($_GET['format']) && $_GET['format'] === 'json')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
 
-    // Если JSON — вернуть данные округов
-    if ($json) {
-        try {
-            $items = $this->districts->all(); // только не удалённые (deleted_at IS NULL)
-            $this->json($items);
-            return;
-        } catch (Throwable $e) {
-            $this->json(['error' => 'Внутренняя ошибка'], 500);
-            return;
-        }
+        if ($json) {
+            try {
+                $items = $this->districts->all();
+                $this->json($items);
+                return;
+            } catch (Throwable $e) {
+                $this->json(['error' => 'Внутренняя ошибка'], 500);
+                return;
+            }
     }
 
-    // Если HTML — отдаём страницу округов
     header_remove('Content-Type');
     header('Content-Type: text/html; charset=utf-8');
     readfile(__DIR__ . '/../../public/districts.html');
@@ -39,25 +35,22 @@ class DistrictController extends BaseController
 
     public function indexAdmin(): void
     {
-    $this->requireMethod('GET');
+        $this->requireMethod('GET');
 
-    // Определяем нужен ли JSON
-    $json = (isset($_GET['format']) && $_GET['format'] === 'json')
-         || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
+        $json = (isset($_GET['format']) && $_GET['format'] === 'json')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
 
-    // Если JSON — вернуть данные округов
-    if ($json) {
-        try {
-            $items = $this->districts->all(); // только не удалённые (deleted_at IS NULL)
-            $this->json($items);
-            return;
-        } catch (Throwable $e) {
-            $this->json(['error' => 'Внутренняя ошибка'], 500);
-            return;
-        }
+        if ($json) {
+            try {
+                $items = $this->districts->all();
+                $this->json($items);
+                return;
+            } catch (Throwable $e) {
+                $this->json(['error' => 'Внутренняя ошибка'], 500);
+                return;
+            }
     }
 
-    // Если HTML — отдаём страницу округов
     header_remove('Content-Type');
     header('Content-Type: text/html; charset=utf-8');
     readfile(__DIR__ . '/../../public/districts-admin.html');
@@ -74,15 +67,13 @@ class DistrictController extends BaseController
             return;
         }
 
-        // Определяем формат: JSON или HTML
         $wantsJson = 
             (isset($_GET['format']) && $_GET['format'] === 'json')
             || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
 
         if ($wantsJson) {
-            // ---- JSON ----
             try {
-                $rows = $this->districts->find($district); // массив строк
+                $rows = $this->districts->find($district);
 
                 if (!$rows) {
                     $this->json(['error' => 'Округ не найден'], 404);
@@ -97,7 +88,6 @@ class DistrictController extends BaseController
             }
         }
 
-        // ---- HTML ----
         header_remove('Content-Type');
         header('Content-Type: text/html; charset=utf-8');
         readfile(__DIR__ . '/../../public/district.html');
@@ -107,7 +97,6 @@ class DistrictController extends BaseController
     {
         $this->requireMethod('GET');
 
-        // id приходит из роутера как строка, приводим к числу
         $district = (int)$id;
             error_log("SHOW_ADMIN: district int={$district}");
 
@@ -117,19 +106,16 @@ class DistrictController extends BaseController
             return;
         }
 
-        // Определяем формат: JSON или HTML
         $wantsJson =
             (isset($_GET['format']) && $_GET['format'] === 'json')
             || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
         error_log("SHOW_ADMIN: wantsJson=" . ($wantsJson ? 'yes' : 'no'));
 
         if ($wantsJson) {
-            // ---- JSON ----
             try {
                 error_log("SHOW_ADMIN: find({$district})");
 
-                // ищем данные по номеру округа
-                $rows = $this->districts->findAdmin($district); // массив строк
+                $rows = $this->districts->findAdmin($district);
                 error_log("SHOW_ADMIN: find({$district}) rows=" . json_encode($rows, JSON_UNESCAPED_UNICODE));
                 if (!$rows) {
                     $this->json(['error' => 'Округ не найден'], 404);
@@ -144,14 +130,12 @@ class DistrictController extends BaseController
             }
         }
 
-        // ---- HTML ----
         header_remove('Content-Type');
         header('Content-Type: text/html; charset=utf-8');
         readfile(__DIR__ . '/../../public/district-admin.html');
     }
 
 
-    // POST /district/{district}/streets
     public function storeStreet(string $district): void
     {
         $this->requireMethod('POST');
@@ -176,7 +160,6 @@ class DistrictController extends BaseController
         }
     }
 
-    // PUT /district/{district}/streets
     public function updateStreet(string $district): void
     {
         $this->requireMethod('PUT');
@@ -202,7 +185,6 @@ class DistrictController extends BaseController
         }
     }
 
-    // POST /district/{district}/houses
     public function storeHouse(string $district): void
     {
         $this->requireMethod('POST');
@@ -228,7 +210,6 @@ class DistrictController extends BaseController
         }
     }
 
-    // PUT /district/{district}/houses
     public function updateHouse(string $district): void
     {
         $this->requireMethod('PUT');
@@ -255,7 +236,6 @@ class DistrictController extends BaseController
         }
     }
 
-    // DELETE /district/{district}/houses
     public function deleteHouse(string $district): void
     {
         $this->requireMethod('DELETE');

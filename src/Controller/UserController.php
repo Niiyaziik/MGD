@@ -9,7 +9,6 @@ class UserController extends BaseController
 {
     public function __construct(private UserService $users) {}
 
-    // POST /api/users
     public function store(): void
     {
         $this->requireMethod('POST');
@@ -25,7 +24,6 @@ class UserController extends BaseController
         }
     }
 
-    // PATCH /api/users/{id}
     public function update(int $id): void
     {
         $this->requireMethod('PATCH');

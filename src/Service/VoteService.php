@@ -19,12 +19,9 @@ class VoteService
         private VoteRepositoryInterface $votes,
     ) {}
 
-    /**
-     * Голосование пользователя за кандидата
-     */
+
     public function castVote(int $userId, int $candidateId): Vote
     {
-        // 1) Проверки предметной области
         $user = $this->users->findById($userId);
         if (!$user) {
             throw new DomainException('Пользователь не найден');
@@ -35,16 +32,10 @@ class VoteService
             throw new DomainException('Кандидат не найден');
         }
 
-        // (опционально) правило: голосовать можно только в своём округе
-        // if ($user->district_id !== $candidate->district_id) {
-        //     throw new DomainException('Нельзя голосовать за кандидата из другого округа');
-        // }
 
-        // 2) Транзакция, чтобы исключить гонки
         try {
             $this->pdo->beginTransaction();
 
-            // Защита на уровне приложения (вдобавок к UNIQUE в БД)
             $existing = $this->votes->findByUserId($userId);
             if ($existing) {
                 throw new DomainException('Пользователь уже голосовал');
@@ -62,7 +53,6 @@ class VoteService
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
 
-            // Если нарвались на дубликат UNIQUE (например, параллельный запрос)
             if ($this->isUniqueViolation($e)) {
                 throw new DomainException('Пользователь уже голосовал');
             }
@@ -72,7 +62,6 @@ class VoteService
 
     private function isUniqueViolation(\Throwable $e): bool
     {
-        // MySQL: SQLSTATE[23000]: Integrity constraint violation
         return str_contains($e->getMessage(), '23000') || str_contains($e->getMessage(), 'Integrity constraint');
     }
 }

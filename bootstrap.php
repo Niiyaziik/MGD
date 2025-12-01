@@ -35,7 +35,6 @@ Database::init($_ENV['DB_DSN'], $_ENV['DB_USER'], $_ENV['DB_PASS']);
 
 function runMigrations(PDO $pdo): void
 {
-    // Создать таблицу версий, если её нет
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS schema_migrations (
             version VARCHAR(191) PRIMARY KEY,
@@ -43,10 +42,8 @@ function runMigrations(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
 
-    // Текущая версия миграции (меняй при изменениях схемы)
     $version = '2025_11_10_000001_initial_schema';
 
-    // Проверим, применялась ли уже
     $stmt = $pdo->prepare("SELECT 1 FROM schema_migrations WHERE version = :v LIMIT 1");
     $stmt->execute([':v' => $version]);
     if ($stmt->fetchColumn()) {
@@ -159,6 +156,11 @@ $container->set(
     fn($c) => new DistrictController($c->get(DistrictRepositoryInterface::class))
 );
 
+$container->set(
+    VoteController::class,
+    fn($c) => new VoteController($c->get(VoteRepositoryInterface::class))
+);
+
 $container->set(CandidateRepositoryInterface::class,
     fn($c) => new CandidateRepository($c->get(PDO::class))
 );
@@ -193,8 +195,14 @@ $container->set(CandidateService::class, fn($c)=> new CandidateService(
     $c->get(\App\Repository\Contract\DistrictRepositoryInterface::class),
 ));
 
-$container->set(AdminAuthService::class, fn($c)=> new AdminAuthService(
+$container->set(AdminService::class, fn($c)=> new AdminAuthService(
     $c->get(\App\Repository\Contract\AdminRepositoryInterface::class),
 ));
+
+$container->set(AdminMiddleware::class,
+    fn($c) => new AdminMiddleware(
+        $c->get(\App\Service\AdminService::class)
+    )
+);
 
 return $container;

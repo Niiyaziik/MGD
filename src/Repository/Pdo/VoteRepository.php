@@ -43,4 +43,41 @@ class VoteRepository implements VoteRepositoryInterface
         }
         return $rows;
     }
+
+    public function all(): array
+    {
+        $sql = "
+        SELECT
+            COALESCE(u.district_id, c.district)              AS district,
+            CONCAT_WS(' ', u.surname, u.name, u.patronymic)  AS voter_name,
+            CONCAT('ул. ', s.street, ', ', h.house)          AS address,
+            u.phone                                          AS phone,
+            CONCAT_WS(' ', c.surname, c.name, c.patronymic)  AS candidate
+        FROM votes v
+        JOIN users u
+          ON u.id = v.user_id
+         AND u.deleted_at IS NULL
+        JOIN candidates c
+          ON c.id = v.candidate_id
+         AND c.deleted_at IS NULL
+        LEFT JOIN streets s
+          ON s.id = u.street_id
+         AND s.deleted_at IS NULL
+        LEFT JOIN house h
+          ON h.id = u.house_id
+         AND h.deleted_at IS NULL
+        WHERE v.deleted_at IS NULL
+        ORDER BY
+            COALESCE(u.district_id, c.district),
+            u.surname,
+            u.name,
+            u.patronymic,
+            v.id
+    ";
+
+        $st = $this->pdo->query($sql);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows ?: [];
+    }
 }

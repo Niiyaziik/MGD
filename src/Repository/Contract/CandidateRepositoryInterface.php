@@ -3,7 +3,7 @@ namespace App\Repository\Contract;
 
 interface CandidateRepositoryInterface
 {
-    /** Вернёт всех кандидатов (опционально по округу) с полем votes_count */
+    /** Вернёт всех кандидатов (опционально по округу)*/
     public function all(?int $districtId = null): array;
 
     /** Найти кандидата по id (с votes_count) */
@@ -17,6 +17,6 @@ interface CandidateRepositoryInterface
     /** Обновить кандидата */
     public function update(int $id, array $data): void;
 
-    /** Удалить кандидата (жёстко) */
+    /** Удалить кандидата */
     public function delete(int $id): void;
 }

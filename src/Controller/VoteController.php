@@ -1,15 +1,14 @@
 <?php
 namespace App\Controller;
 
-use App\Service\VoteService;
+use App\Repository\Contract\VoteRepositoryInterface;
 use DomainException;
 use Throwable;
 
 class VoteController extends BaseController
 {
-    public function __construct(private VoteService $votes) {}
+    public function __construct(private VoteRepositoryInterface $votes) {}
 
-    // POST /api/votes
     public function cast(): void
     {
         $this->requireMethod('POST');
@@ -31,5 +30,23 @@ class VoteController extends BaseController
         } catch (Throwable $e) {
             $this->json(['ok' => false, 'error' => 'Внутренняя ошибка'], 500);
         }
+    }
+
+    public function index(): void
+    {
+        $format = $_GET['format'] ?? '';
+
+        $rows = $this->votes->all();
+
+        if ($format === 'json') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $title = 'Проголосовавшие';
+        $votes = $rows;
+
+        require __DIR__ . '/../../public/votes-admin.html';
     }
 }

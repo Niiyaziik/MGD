@@ -6,28 +6,39 @@ use DomainException;
 
 class AdminController extends BaseController
 {
-    public function __construct(private AdminAuthService $auth) {}
+    public function __construct(private AdminService $auth) {}
 
-    // POST /api/admin/login
     public function login(): void
     {
-        $this->requireMethod('POST');
-        $data = $this->getJsonBody();
+        $login    = $_POST['login']    ?? '';
+        $password = $_POST['password'] ?? '';
 
-        $login = trim((string)($data['login'] ?? ''));
-        $password = (string)($data['password'] ?? '');
+        $login    = trim($login);
+        $password = trim($password);
 
         if ($login === '' || $password === '') {
-            $this->json(['ok' => false, 'error' => 'Логин и пароль обязательны'], 422);
+            http_response_code(400);
+            echo 'Логин и пароль обязательны';
             return;
         }
 
-        try {
-            $adminId = $this->auth->login($login, $password);
-            // тут можно выдать токен/сессию
-            $this->json(['ok' => true, 'admin_id' => $adminId]);
-        } catch (DomainException $e) {
-            $this->json(['ok' => false, 'error' => $e->getMessage()], 401);
+        $adminId = $this->auth->checkCredentials($login, $password);
+
+        if ($adminId === null) {
+            http_response_code(401);
+            echo 'Неверный логин или пароль';
+            return;
         }
+
+        $_SESSION['admin_id'] = $adminId;
+
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'ok']);
+    }
+
+    public function logout(): void
+    {
+        unset($_SESSION['admin_id']);
+        header('Location: /');
     }
 }

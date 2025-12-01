@@ -35,7 +35,6 @@ class CandidateRepository implements CandidateRepositoryInterface
     {
         $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email
                 FROM candidates c
-                -- JOIN districts d ON d.id = c.district_id
                 ORDER BY c.id ASC
                 LIMIT :limit";
         $st = $this->pdo->prepare($sql);
@@ -106,7 +105,6 @@ class CandidateRepository implements CandidateRepositoryInterface
 
     public function delete(int $id): void
     {
-        // мягкое удаление (как в твоих таблицах)
         $st = $this->pdo->prepare("UPDATE candidates SET deleted_at=NOW() WHERE id=? AND deleted_at IS NULL");
         $st->execute([$id]);
     }

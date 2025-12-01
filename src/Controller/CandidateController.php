@@ -68,7 +68,6 @@ class CandidateController extends BaseController
         readfile(__DIR__ . '/../../public/candidate.html');
     }
 
-    // POST /api/candidates
     public function store(): void
     {
         $this->requireMethod('POST');
@@ -80,12 +79,11 @@ class CandidateController extends BaseController
         $surname = $name = $patronymic = null;
 
         if ($fullName !== '') {
-            // Разбиваем по одному или более пробелов
             $parts = preg_split('/\s+/', $fullName);
 
-            $surname    = $parts[0] ?? null; // первая часть
-            $name       = $parts[1] ?? null; // вторая часть
-            $patronymic = $parts[2] ?? null; // третья часть (может отсутствовать)
+            $surname    = $parts[0] ?? null;
+            $name       = $parts[1] ?? null;
+            $patronymic = $parts[2] ?? null;
         }
         error_log('STORE parts: ' . json_encode($parts, JSON_UNESCAPED_UNICODE));
         error_log('STORE surname: ' . var_export($surname, true));
@@ -96,7 +94,6 @@ class CandidateController extends BaseController
             return;
         }
 
-        // Собираем данные из формы и мапим под репозиторий
         $data = [
             'surname'     => $surname,
             'name'        => $name,
@@ -110,9 +107,7 @@ class CandidateController extends BaseController
 
         error_log('STORE data before photo: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
 
-        // Обработка фото
         if (!empty($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-            // поправь путь под свою структуру (скорее всего /public/assets/...)
             $uploadDir = __DIR__ . '/../../public/assets/img/candidates/';
 
             if (!is_dir($uploadDir)) {
@@ -136,24 +131,20 @@ class CandidateController extends BaseController
                 return;
             }
 
-            // путь, который будет храниться в БД и использоваться в <img src="...">
             $data['photo'] = '/assets/img/candidates/' . $fileName;
         }
 
         try {
             $id = $this->candidates->create($data);
 
-            // если это форма, логичнее редирект, а не JSON
             header('Location: /candidates/admin');
             exit;
         } catch (DomainException $e) {
             $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
         } catch (Throwable $e) {
-            // Лог в файл / в error_log
             error_log("CANDIDATE_STORE_ERROR: " . $e->getMessage());
             error_log($e->getTraceAsString());
 
-            // Временно отдаём реальный текст ошибки наружу
             $this->json(['ok' => false, 'error' => $e->getMessage()], 500);
         }
     }
@@ -169,7 +160,6 @@ class CandidateController extends BaseController
                 $this->json(['ok' => false, 'error' => 'Кандидат не найден'], 404);
                 return;
             }
-            // Подключаешь view и передаёшь $candidate
             include __DIR__ . '/../../public/candidate-update-admin.html';
 
         } catch (Throwable $e) {
@@ -178,28 +168,23 @@ class CandidateController extends BaseController
         }
     }
 
-    // PATCH /api/candidates/{id}
     public function update(string $id): void
     {
         $id = (int)$id;
 
-        // защита от кривого id
         if ($id <= 0) {
             $this->json(['ok' => false, 'error' => 'Некорректный ID кандидата'], 400);
             return;
         }
 
-        // ожидаем обычный POST из формы
         $this->requireMethod('POST');
 
-        // Пытаемся найти существующего кандидата (чтобы, например, не потерять старое фото)
         $existing = $this->candidates->findById($id);
         if (!$existing) {
             $this->json(['ok' => false, 'error' => 'Кандидат не найден'], 404);
             return;
         }
 
-        // --------- ФИО из full_name ---------
         $fullName = trim($_POST['full_name'] ?? '');
         $surname = $name = $patronymic = null;
 
@@ -215,19 +200,17 @@ class CandidateController extends BaseController
             return;
         }
 
-        // --------- Остальные поля из формы ---------
         $data = [
             'surname'     => $surname,
             'name'        => $name,
             'patronymic'  => $patronymic,
             'phone'       => $_POST['phone']       ?? null,
-            'district'    => $_POST['address']     ?? null, // address в форме = district в БД
+            'district'    => $_POST['address']     ?? null,
             'email'       => $_POST['email']       ?? null,
             'description' => $_POST['description'] ?? null,
-            'photo'       => $existing['photo']    ?? null, // по умолчанию оставляем старое фото
+            'photo'       => $existing['photo']    ?? null,
         ];
 
-        // --------- Фото (если выбрали новое) ---------
         if (!empty($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
 
             $uploadDir = __DIR__ . '/../../public/assets/img/candidates/';
@@ -256,16 +239,12 @@ class CandidateController extends BaseController
             $data['photo'] = '/assets/img/candidates/' . $fileName;
         }
 
-        // --------- Сохранение ---------
         try {
             $this->candidates->update($id, $data);
 
-            // Так как это форма — логичнее сделать редирект, а не JSON
             header('Location: /candidates/admin');
             exit;
 
-            // Если нужен JSON-ответ:
-            // $this->json(['ok' => true]);
         } catch (DomainException $e) {
             $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
         } catch (Throwable $e) {
@@ -274,7 +253,6 @@ class CandidateController extends BaseController
     }
 
 
-    // DELETE /api/candidates/{id}
     public function destroy(int $id): void
     {
         $this->requireMethod('DELETE');

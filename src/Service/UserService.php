@@ -19,7 +19,6 @@ class UserService
 
     public function register(array $data): User
     {
-        // Базовая доменная валидация
         if (empty($data['surname']) || empty($data['name'])) {
             throw new DomainException('Имя и фамилия обязательны');
         }
@@ -33,7 +32,6 @@ class UserService
             throw new DomainException('Округ не найден');
         }
 
-        // Проверка уникальности бизнес-значимых полей
         if (!empty($data['phone']) && $this->users->findByPhone($data['phone'])) {
             throw new DomainException('Телефон уже используется');
         }
@@ -66,7 +64,6 @@ class UserService
         $user = $this->users->findById($id);
         if (!$user) throw new DomainException('Пользователь не найден');
 
-        // Применяем патч и выполняем доменные проверки
         if (array_key_exists('district_id', $patch)) {
             $districtId = (int)$patch['district_id'];
             if ($districtId && !$this->districts->findById($districtId)) {

@@ -36,6 +36,45 @@ class UserRepository implements UserRepositoryInterface
         return $st->fetchAll();
     }
 
+    public function findByPhone(string $phone): ?array
+    {
+        $st = $this->pdo->prepare("
+            SELECT *
+            FROM users
+            WHERE phone = :phone
+            AND deleted_at IS NULL
+            LIMIT 1
+        ");
+        $st->execute([':phone' => $phone]);
+        $row = $st->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function create(array $data): int
+    {
+        $st = $this->pdo->prepare("
+            INSERT INTO users (surname, name, patronymic, phone, link_vk,
+                            district_id, street_id, house_id, auth_method, created_at)
+            VALUES (:surname, :name, :patronymic, :phone, :link_vk,
+                    :district_id, :street_id, :house_id, :auth_method, NOW())
+        ");
+
+        $st->execute([
+            ':surname'     => $data['surname']     ?? null,
+            ':name'        => $data['name']        ?? null,
+            ':patronymic'  => $data['patronymic']  ?? null,
+            ':phone'       => $data['phone']       ?? null,
+            ':link_vk'     => $data['link_vk']     ?? null,
+            ':district_id' => $data['district_id'] ?? null,
+            ':street_id'   => $data['street_id']   ?? null,
+            ':house_id'    => $data['house_id']    ?? null,
+            ':auth_method' => $data['auth_method'] ?? null,
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+
     public function update(int $id, array $data): void
     {
         $st = $this->pdo->prepare(

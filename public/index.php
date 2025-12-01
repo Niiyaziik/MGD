@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+session_start();
+
 require __DIR__ . '/../vendor/autoload.php';
 
 $container = require __DIR__ . '/../bootstrap.php';
@@ -16,11 +18,11 @@ $router->get('/', function () {
 });
 
 // Округа
-$router->get('/districts', [\App\Controller\DistrictController::class, 'index']);   // список
-$router->get('/districts/admin', [\App\Controller\DistrictController::class, 'indexAdmin']);   // список
-$router->get('/district', [\App\Controller\DistrictController::class, 'show']); // просмотр
-$router->get('/district/admin/{id}', [\App\Controller\DistrictController::class, 'showAdmin']); // просмотр
-$router->post('/districts', [\App\Controller\DistrictController::class, 'store']);  // создание
+$router->get('/districts', [\App\Controller\DistrictController::class, 'index']);
+$router->get('/districts/admin', [\App\Controller\DistrictController::class, 'indexAdmin']);
+$router->get('/district', [\App\Controller\DistrictController::class, 'show']);
+$router->get('/district/admin/{id}', [\App\Controller\DistrictController::class, 'showAdmin']);
+$router->post('/districts', [\App\Controller\DistrictController::class, 'store']);
 $router->post('/districts/{id}/update', [\App\Controller\DistrictController::class, 'update']);
 $router->post('/districts/{id}/delete', [\App\Controller\DistrictController::class, 'destroy']);
 $router->post('/district/{district}/streets', [\App\Controller\DistrictController::class, 'storeStreet']);
@@ -47,12 +49,21 @@ $router->post('/users/{id}/update', [\App\Controller\UserController::class, 'upd
 $router->post('/users/{id}/delete', [\App\Controller\UserController::class, 'destroy']);
 
 // Голоса
-$router->post('/votes', [\App\Controller\VoteController::class, 'store']); // проголосовать (1 раз)
+$router->post('/votes', [\App\Controller\VoteController::class, 'store']);
+$router->get('/votes/admin', [\App\Controller\VoteController::class, 'index']);
 
 // Админ
-$router->get('/admin/login', [\App\Controller\AdminController::class, 'loginForm']);
 $router->post('/admin/login', [\App\Controller\AdminController::class, 'login']);
 $router->post('/admin/logout', [\App\Controller\AdminController::class, 'logout']);
+
+$router->post('/auth/login-phone', [AuthController::class, 'loginByPhone']);
+
+// VK OAuth (упрощённо, только структура)
+$router->get('/auth/vk', [\App\Controller\AuthController::class, 'vkRedirect']);
+$router->get('/auth/vk/callback', [\App\Controller\AuthController::class, 'vkCallback']);
+
+// выход пользователя
+$router->post('/auth/logout', [\App\Controller\AuthController::class, 'logoutUser']);
 
 error_log('FRONT CONTROLLER: ' . $_SERVER['REQUEST_METHOD'] . ' ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
