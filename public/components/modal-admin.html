@@ -1,19 +1,26 @@
-<div id="modal-admin" class="modal">
-    <div class="modal__backdrop"></div>
-    <div class="modal__dialog" role="dialog" aria-modal="true">
-        <h2 class="modal__title">Вход для администратора</h2>
+<div class="modal" id="modal-admin" aria-hidden="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog">
+        <div class="modal__content">
+            <button class="modal__close" type="button" data-close-modal>×</button>
+            <h2 class="modal__title">Вход для администратора</h2>
 
-        <form id="admin-login-form" class="modal__form">
-            <input type="text" class="modal__input" placeholder="Логин">
-            <input type="password" class="modal__input" placeholder="Пароль">
+            <form id="admin-login-form" class="modal__form">
+                <input type="text" class="modal__input" name="login" placeholder="Логин" autocomplete="username">
+                <input type="password" class="modal__input" name="password" placeholder="Пароль"
+                    autocomplete="current-password">
 
-            <label class="modal__checkbox">
-                <input type="checkbox">
-                Запомнить меня
-            </label>
-            <div class="modal__actions-admin">
-                <button type="submit" class="modal__submit">Войти</button>
-            </div>
-        </form>
+                <label class="modal__checkbox">
+                    <input type="checkbox" name="remember">
+                    Запомнить меня
+                </label>
+
+                <div class="modal__actions-admin">
+                    <button type="submit" class="modal__submit">Войти</button>
+                </div>
+
+                <div class="modal__error" id="admin-login-error" style="display:none;color:#c00;margin-top:8px;"></div>
+            </form>
+        </div>
     </div>
 </div>

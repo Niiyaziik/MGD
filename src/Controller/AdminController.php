@@ -1,44 +1,77 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use App\Service\AdminAuthService;
-use DomainException;
+use App\Service\AdminService;
 
 class AdminController extends BaseController
 {
-    public function __construct(private AdminService $auth) {}
+    public function __construct(
+        private AdminService $adminService
+    ) {
+    }
 
-    public function login(): void
+    /**
+     * Стартовая страница админки.
+     * Можно вызывать, например, по /candidates/admin или /admin
+     */
+    public function index(): void
     {
-        $login    = $_POST['login']    ?? '';
-        $password = $_POST['password'] ?? '';
+        $this->requireMethod('GET');
 
-        $login    = trim($login);
-        $password = trim($password);
-
-        if ($login === '' || $password === '') {
-            http_response_code(400);
-            echo 'Логин и пароль обязательны';
+        if (!$this->adminService->check()) {
+            header('Location: /');
             return;
         }
 
-        $adminId = $this->auth->checkCredentials($login, $password);
+        // Подставь своe представление
+        $this->render('admin/dashboard', []);
+    }
 
-        if ($adminId === null) {
-            http_response_code(401);
-            echo 'Неверный логин или пароль';
+    /**
+     * POST /admin/login
+     * Логин админа по логину и паролю.
+     *
+     * ОЖИДАЕМ JSON:
+     * {
+     *   "login": "admin",
+     *   "password": "******"
+     * }
+     */
+    public function loginByPassword(): void
+    {
+        $this->requireMethod('POST');
+
+        $data = $this->getJsonBody();
+
+        $login    = (string)($data['login']    ?? '');
+        $password = (string)($data['password'] ?? '');
+
+        $result = $this->adminService->attemptLogin($login, $password);
+
+        if (!$result['ok']) {
+            $this->json([
+                'ok'    => false,
+                'error' => $result['error'] ?? 'Ошибка авторизации',
+            ], 422);
             return;
         }
 
-        $_SESSION['admin_id'] = $adminId;
-
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'ok']);
+        // Можно вернуть какую-то информацию об админе, если нужно
+        $this->json(['ok' => true]);
     }
 
-    public function logout(): void
-    {
-        unset($_SESSION['admin_id']);
-        header('Location: /');
-    }
+    /**
+     * POST /admin/logout
+     */
+public function logout(): void
+{
+    unset($_SESSION['admin_id']);
+    session_regenerate_id(true);
+
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => true]);
+    exit;
+}
 }

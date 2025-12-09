@@ -19,4 +19,8 @@ interface CandidateRepositoryInterface
 
     /** Удалить кандидата */
     public function delete(int $id): void;
+
+    public function getAdminCandidates(int $deleted = 0): array;
+
+    public function getCandidateDistrict(int $candidateId): ?array;
 }

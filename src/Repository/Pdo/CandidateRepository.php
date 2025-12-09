@@ -33,7 +33,7 @@ class CandidateRepository implements CandidateRepositoryInterface
 
     public function first(int $limit = 5): array
     {
-        $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email
+        $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email, c.district
                 FROM candidates c
                 ORDER BY c.id ASC
                 LIMIT :limit";
@@ -69,7 +69,7 @@ class CandidateRepository implements CandidateRepositoryInterface
     public function create(array $data): int
     {
         $st = $this->pdo->prepare(
-            "INSERT INTO candidates(surname, name, patronymic, phone, district, photo, email, description) VALUES(?,?,?,?,?,?,?,?)"
+            "INSERT INTO candidates(surname, name, patronymic, phone, district, address, photo, email, description) VALUES(?,?,?,?,?,?,?,?,?)"
         );
         $st->execute([
             $data['surname'] ?? null,
@@ -77,6 +77,7 @@ class CandidateRepository implements CandidateRepositoryInterface
             $data['patronymic'] ?? null,
             $data['phone'] ?? null,
             $data['district'] ?? null,
+            $data['address'] ?? null,
             $data['photo'] ?? null,
             $data['email'] ?? null,
             $data['description'] ?? null,
@@ -87,7 +88,7 @@ class CandidateRepository implements CandidateRepositoryInterface
     public function update(int $id, array $data): void
     {
         $st = $this->pdo->prepare(
-            "UPDATE candidates SET surname=?, name=?, patronymic=?, phone=?, district=?, photo=?, email=?, description=?, updated_at=NOW()
+            "UPDATE candidates SET surname=?, name=?, patronymic=?, phone=?, district=?, address=?, photo=?, email=?, description=?, updated_at=NOW()
              WHERE id=? AND deleted_at IS NULL"
         );
         $st->execute([
@@ -96,6 +97,7 @@ class CandidateRepository implements CandidateRepositoryInterface
             $data['patronymic'] ?? null,
             $data['phone'] ?? null,
             $data['district'] ?? null,
+            $data['address'] ?? null,
             $data['photo'] ?? null,
             $data['email'] ?? null,
             $data['description'] ?? null,
@@ -107,5 +109,54 @@ class CandidateRepository implements CandidateRepositoryInterface
     {
         $st = $this->pdo->prepare("UPDATE candidates SET deleted_at=NOW() WHERE id=? AND deleted_at IS NULL");
         $st->execute([$id]);
+    }
+
+    public function getAdminCandidates(int $deleted = 0): array
+    {
+        $whereDeleted = $deleted === 1
+            ? 'c.deleted_at IS NOT NULL'
+            : 'c.deleted_at IS NULL';
+
+        $sql = "
+            SELECT
+                c.id,
+                c.created_at          AS registration_date,
+                c.surname,
+                c.name,
+                c.patronymic,
+                c.phone,
+                c.photo,
+                c.vk_id,
+                c.district         AS district,
+                c.address
+            FROM candidates c
+            LEFT JOIN districts d ON c.district = d.id
+            WHERE $whereDeleted
+            ORDER BY c.id DESC
+        ";
+
+        $st = $this->pdo->query($sql);
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getCandidateDistrict(int $candidateId): ?array
+    {
+        $sql = "
+            SELECT
+                d.id       AS id,
+                d.district AS district
+            FROM candidates c
+            INNER JOIN districts d ON c.district = d.id
+            WHERE c.id = :id
+            AND c.deleted_at IS NULL
+            LIMIT 1
+        ";
+
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':id' => $candidateId]);
+
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
     }
 }

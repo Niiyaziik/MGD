@@ -29,4 +29,34 @@ abstract class BaseController
             exit;
         }
     }
+
+    protected function requireVoter(): array
+    {
+        $voter = $_SESSION['voter'] ?? null;
+
+        if (!$voter) {
+            // Пытаемся определить, ожидает ли клиент JSON
+            $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+
+            if (str_contains($accept, 'application/json')) {
+                $this->json([
+                    'ok'    => false,
+                    'error' => 'Требуется авторизация для голосования.',
+                ], 401);
+                // жёстко прекращаем выполнение контроллера
+                exit;
+            }
+
+            // для обычных запросов можно сделать редирект на главную
+            header('Location: /');
+            exit;
+        }
+
+        return $voter;
+    }
+
+    protected function isVoterAuthorized(): bool
+    {
+        return !empty($_SESSION['voter']);
+    }
 }

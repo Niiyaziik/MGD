@@ -48,9 +48,10 @@ class VoteRepository implements VoteRepositoryInterface
     {
         $sql = "
         SELECT
-            COALESCE(u.district_id, c.district)              AS district,
-            CONCAT_WS(' ', u.surname, u.name, u.patronymic)  AS voter_name,
-            CONCAT('ул. ', s.street, ', ', h.house)          AS address,
+            v.id                                              AS id, 
+            COALESCE(u.district_id)                          AS district,
+            CONCAT_WS(' ', u.surname, u.name, u.patronymic)  AS user_name,
+            CONCAT(s.street, ', ', h.house)                  AS address,
             u.phone                                          AS phone,
             CONCAT_WS(' ', c.surname, c.name, c.patronymic)  AS candidate
         FROM votes v
@@ -68,7 +69,7 @@ class VoteRepository implements VoteRepositoryInterface
          AND h.deleted_at IS NULL
         WHERE v.deleted_at IS NULL
         ORDER BY
-            COALESCE(u.district_id, c.district),
+            COALESCE(u.district_id),
             u.surname,
             u.name,
             u.patronymic,
@@ -79,5 +80,155 @@ class VoteRepository implements VoteRepositoryInterface
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
         return $rows ?: [];
+    }
+
+    public function voted(int $userId, int $candidateId): array
+    {
+        // защита от повторного голосования
+        if ($this->userHasVote($userId)) {
+            throw new DomainException('Вы уже голосовали');
+        }
+
+        // создаём голос
+        $st = $this->pdo->prepare(
+            "INSERT INTO votes (user_id, candidate_id, created_at)
+             VALUES (?, ?, NOW())"
+        );
+        $st->execute([$userId, $candidateId]);
+
+        $id = (int)$this->pdo->lastInsertId();
+
+        // возвращаем свежевставленный голос (можно без этого, если тебе не надо)
+        $st = $this->pdo->prepare("SELECT * FROM votes WHERE id = ?");
+        $st->execute([$id]);
+        $vote = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $vote ?: [];
+    }
+
+    // public function getAdminList(): array
+    // {
+    //     // Возвращает то же, что и отображается во фронтенде в votes-admin.php
+    //     return $this->all();
+    // }
+
+    public function getAdminList(bool $onlyDeleted = false): array
+    {
+        $where = $onlyDeleted
+            ? 'v.deleted_at IS NOT NULL'
+            : 'v.deleted_at IS NULL';
+
+        $sql = "
+            SELECT
+                v.id                  AS id,
+                u.id                  AS user_id,
+                COALESCE(u.district_id)                         AS district,
+                CONCAT_WS(' ', u.surname, u.name, u.patronymic) AS user_name,
+                CONCAT(s.street, ', ', h.house)                 AS address,
+                u.phone                                         AS phone,
+                CONCAT_WS(' ', c.surname, c.name, c.patronymic) AS candidate
+            FROM votes v
+            JOIN users u
+            ON u.id = v.user_id
+            AND u.deleted_at IS NULL
+            JOIN candidates c
+            ON c.id = v.candidate_id
+            AND c.deleted_at IS NULL
+            LEFT JOIN streets s
+            ON s.id = u.street_id
+            AND s.deleted_at IS NULL
+            LEFT JOIN house h
+            ON h.id = u.house_id
+            AND h.deleted_at IS NULL
+            WHERE $where
+            ORDER BY
+                COALESCE(u.district_id),
+                u.surname,
+                u.name,
+                u.patronymic,
+                v.id
+        ";
+
+        $st = $this->pdo->query($sql);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows ?: [];
+    }
+
+    public function softDelete(int $voteId): bool
+    {
+        $st = $this->pdo->prepare(
+            "UPDATE votes
+            SET deleted_at = NOW()
+            WHERE id = ? AND deleted_at IS NULL"
+        );
+        $st->execute([$voteId]);
+        return $st->rowCount() > 0;
+    }
+
+    public function getDeletedAdminList(): array
+    {
+        return $this->getAdminList(true);
+    }
+
+    public function adminUpdate(int $voteId, array $fields): bool
+    {
+        // находим user_id по голосу
+        $st = $this->pdo->prepare(
+            'SELECT user_id FROM votes WHERE id = ? AND deleted_at IS NULL'
+        );
+        $st->execute([$voteId]);
+        $userId = $st->fetchColumn();
+
+        if (!$userId) {
+            return false;
+        }
+
+        $userId = (int)$userId;
+
+        $fio   = trim((string)($fields['user_name'] ?? ''));
+        $phone = trim((string)($fields['phone'] ?? ''));
+        // address пока только для отображения, в БД как отдельная строка не хранится
+        // $address = trim((string)($fields['address'] ?? ''));
+
+        $sets   = [];
+        $params = [];
+
+        if ($fio !== '') {
+            $parts = preg_split('/\s+/', $fio);
+            $surname    = $parts[0] ?? null;
+            $name       = $parts[1] ?? null;
+            $patronymic = $parts[2] ?? null;
+
+            if ($surname !== null) {
+                $sets[]   = 'surname = ?';
+                $params[] = $surname;
+            }
+            if ($name !== null) {
+                $sets[]   = 'name = ?';
+                $params[] = $name;
+            }
+            if ($patronymic !== null) {
+                $sets[]   = 'patronymic = ?';
+                $params[] = $patronymic;
+            }
+        }
+
+        if ($phone !== '') {
+            $sets[]   = 'phone = ?';
+            $params[] = $phone;
+        }
+
+        if (!$sets) {
+            // менять нечего — считаем, что всё ОК
+            return true;
+        }
+
+        $params[] = $userId;
+
+        $sql = 'UPDATE users SET '.implode(', ', $sets).', updated_at = NOW() WHERE id = ?';
+        $st  = $this->pdo->prepare($sql);
+
+        return $st->execute($params);
     }
 }

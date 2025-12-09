@@ -2,18 +2,36 @@
   <div class="modal__backdrop"></div>
 
   <div class="modal__dialog" role="dialog" aria-modal="true">
-    <button class="modal__close" type="button" aria-label="Закрыть">&times;</button>
+    <!-- Заголовок -->
+    <h2 class="vote-modal-title">
+      Вы уверены, что хотите<br> проголосовать за кандидата:
+    </h2>
 
-    <h2 class="modal__title">Голосование</h2>
-    <p class="modal__text">
-      Вы успешно авторизовались.<br>
-      Подтвердите, что хотите проголосовать за выбранного кандидата.
-    </p>
+    <!-- Блок с кандидатом -->
+    <div class="vote-modal-candidate">
+      <div class="vote-modal-photo-wrapper">
+        <img id="vote-candidate-photo" class="vote-modal-photo" src="/assets/img/candidates/placeholder.jpeg"
+          alt="Фото кандидата">
+      </div>
 
-    <div class="modal__actions">
-      <button type="button" class="modal__submit" id="vote-confirm-btn">
-        Подтвердить голос
-      </button>
+      <div id="vote-candidate-name" class="vote-modal-name">
+        <span class="lastname"></span>
+        <span class="firstname"> </span><br>
+        <span class="middlename"></span>
+      </div>
+
+      <hr class="vote-modal-separator">
+
+      <div class="vote-modal-buttons">
+        <button type="button" class="vote-modal-btn vote-modal-btn--yes" id="vote-confirm-btn">
+          <img src="/assets/icons/checkMarker.svg" alt="" class="vote-modal-btn-icon">
+          <span class="vote-modal-btn-text">Да</span>
+        </button>
+
+        <button type="button" class="vote-modal-btn vote-modal-btn--cancel" data-close-modal="true">
+          Отмена
+        </button>
+      </div>
     </div>
   </div>
 </div>

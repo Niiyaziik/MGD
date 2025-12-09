@@ -25,19 +25,23 @@
                                 </div>
                                 <nav class="left-side__navigation">
                                         <ul>
-                                                <li><a href="/">Главная</a></li>
-
                                                 <li><a href="/candidates/admin">Кандидаты</a></li>
 
                                                 <li><a href="/districts/admin">Округа</a></li>
 
                                                 <li><a href="/votes/admin">Проголосовавшие</a></li>
 
+                                                <li><a href="/users/admin">БД пользователи</a></li>
+
+                                                <li><a href="/candidates/admin/index">БД кандидаты</a></li>
+
+                                                <li><a href="/districts/admin/index">БД округа</a></li>
+
                                                 <li style="display: none;">Проголосовавшие</li>
                                         </ul>
                                 </nav>
                         </div>
-                        <main id="candidates" class="main_candidates">
+                        <main class="main">
                                 <div id="candidates" class="content-list__content"
                                         style="display: flex; flex-wrap: wrap; justify-content: space-between;">
                                         <h2 id="district-title" class="content-list__districts_title">Проголосовавшие

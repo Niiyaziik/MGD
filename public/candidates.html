@@ -33,10 +33,11 @@
 
                                                 <li style="display: none">Округа</li>
                                         </ul>
-                                        <button class="left-side__button" type="button">Вход для администратора</button>
+                                        <button class="left-side__button" type="button" id="admin-login-btn">Вход для
+                                                администратора</button>
                                 </nav>
                         </div>
-                        <main id="candidates" class="main_candidates">
+                        <main class="main">
                                 <div id="candidates" class="content-list__content"
                                         style="display: flex; flex-wrap: wrap; justify-content: space-between;">
                                         <h2 class="content-list__candidates_title">Кандидаты Молодежной городской думы
@@ -69,28 +70,27 @@
                                                 const data = await res.json();
                                                 const allCandidates = data;
 
-
                                                 const tpl = (c) => `
                                                         <li class="candidate-card">
-                                                        <div class="candidate-card__link">
-                                                        <div class="candidate-card__figure">
+                                                                <div class="candidate-card__link">
+                                                                <div class="candidate-card__figure">
                                                                 <a href="/candidate?id=${Number(c.id)}">
                                                                 <img
                                                                         class="candidates-card__photo"
                                                                         src="${c.photo ? c.photo : '/assets/img/candidates/placeholder.jpeg'}"
                                                                         alt="${(c.surname || '') + ' ' + (c.name || '') + ' ' + (c.patronymic || '')}">
                                                                 </a>
-                                                                <a class="vote-btn" href="/candidate.php?id=${Number(c.id)}">Проголосовать</a>
-                                                        </div>
-                                                        <a class="candidate-card__body" href="/candidate?id=${Number(c.id)}">
-                                                        <h3 class="candidate-card__name">
-                                                                ${(c.surname || '') + ' ' + (c.name || '')}<br>${(c.patronymic || '')}
-                                                        </h3>
-                                                        <div class="candidate-card__role">Кандидат Молодёжной Думы</div>
-                                                        <div class="candidate-card__district">Округ ${(c.district || '')}</div>
-                                                        <div class="candidate-card__email">${(c.email || '')}</div>
-                                                        </a>
-                                                        </div>
+                                                                <a class="vote-btn" href="/candidate.php?id=${Number(c.id)}" data-id="${Number(c.id)}">Проголосовать</a>
+                                                                </div>
+                                                                <a class="candidate-card__body" href="/candidate?id=${Number(c.id)}">
+                                                                <h3 class="candidate-card__name">
+                                                                        ${(c.surname || '') + ' ' + (c.name || '')}<br>${(c.patronymic || '')}
+                                                                </h3>
+                                                                <div class="candidate-card__role">Кандидат Молодёжной Думы</div>
+                                                                <div class="candidate-card__district">Округ ${(c.district || '')}</div>
+                                                                <div class="candidate-card__email">${(c.email || '')}</div>
+                                                                </a>
+                                                                </div>
                                                         </li>`;
 
                                                 function render(list) {
@@ -128,6 +128,16 @@
                                                         render(filtered);
                                                 }
 
+                                                // 🔹 АВТОФИЛЬТР ПО ?district=...
+                                                const params = new URLSearchParams(window.location.search);
+                                                const districtParam = params.get('district');
+                                                if (districtParam && districtInput) {
+                                                        // подставляем значение из урла в поле
+                                                        districtInput.value = districtParam;
+                                                        // сразу применяем фильтр
+                                                        applyFilter();
+                                                }
+
                                                 // клик по кнопке "Показать"
                                                 districtBtn.addEventListener('click', function (e) {
                                                         e.preventDefault();
@@ -141,13 +151,15 @@
                                                                 applyFilter();
                                                         }
                                                 });
+
                                                 districtInput.addEventListener('input', function () {
                                                         if (!this.value.trim()) {
-                                                                render(allCandidates); // ← вот здесь и происходит сброс
+                                                                render(allCandidates); // сброс
                                                         }
                                                 });
                                         })();
                                 </script>
+
                         </main>
                 </div>
 
@@ -262,6 +274,44 @@
                 </div>
                 <script src="/js/load-modals.js"></script>
                 <script src="/js/modals.js"></script>
+                <script>
+                        // Эта функция вызывается, когда Гугловский скрипт reCAPTCHA загружен
+                        function onRecaptchaLoad() {
+                                console.log('onRecaptchaLoad: API загружен. grecaptcha =', !!window.grecaptcha);
+
+                                // Ждём чуть-чуть, чтобы модалки точно успели подгрузиться
+                                setTimeout(() => {
+                                        const el = document.querySelector('.g-recaptcha');
+                                        console.log('onRecaptchaLoad: найден .g-recaptcha?', !!el);
+
+                                        if (el && window.grecaptcha) {
+                                                // Если что-то уже отрисовано — не рендерим второй раз
+                                                if (!el.hasChildNodes()) {
+                                                        console.log('onRecaptchaLoad: рендерим виджет reCAPTCHA');
+                                                        window.grecaptcha.render(el);
+                                                } else {
+                                                        console.log('onRecaptchaLoad: у .g-recaptcha уже есть дети (iframe?)');
+                                                }
+                                        } else {
+                                                console.log('onRecaptchaLoad: либо нет grecaptcha, либо нет div.g-recaptcha');
+                                        }
+                                }, 300);
+                        }
+
+                        // На всякий случай ещё раз проверим чуть позже (если модалки загрузились с задержкой)
+                        window.addEventListener('load', () => {
+                                setTimeout(() => {
+                                        const el = document.querySelector('.g-recaptcha');
+                                        console.log('window.load: повторная проверка .g-recaptcha =', !!el);
+                                        if (el && window.grecaptcha && !el.hasChildNodes()) {
+                                                console.log('window.load: рендерим reCAPTCHA повторно');
+                                                window.grecaptcha.render(el);
+                                        }
+                                }, 800);
+                        });
+                </script>
+                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 </body>
 
 </html>

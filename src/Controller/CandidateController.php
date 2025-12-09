@@ -26,7 +26,7 @@ class CandidateController extends BaseController
         readfile(__DIR__ . '/../../public/candidates.html');
     }
 
-    public function indexAdmin(): void
+    public function adminIndex(): void
     {
         $json = (isset($_GET['format']) && $_GET['format'] === 'json')
               || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
@@ -263,5 +263,89 @@ class CandidateController extends BaseController
         } catch (Throwable $e) {
             $this->json(['ok' => false, 'error' => 'Внутренняя ошибка'], 500);
         }
+    }
+
+    public function indexAdmin(): void
+    {
+        $this->requireMethod('GET');
+
+        $format  = $_GET['format']  ?? null;
+        $deleted = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
+
+        if ($format === 'json') {
+            try {
+                $list = $this->candidates->getAdminCandidates($deleted);
+                $this->json($list);
+            } catch (Throwable $e) {
+                $this->json(['ok' => false, 'error' => 'Ошибка загрузки кандидатов'], 500);
+            }
+            return;
+        }
+
+        header_remove('Content-Type');
+        header('Content-Type: text/html; charset=utf-8');
+        include __DIR__ . '/../../public/candidates-db.php';
+    }
+
+    /**
+     * Удаление кандидата (мягкое, deleted_at = NOW()).
+     * DELETE /candidates/admin/delete
+     * body: { "id": 123 }
+     */
+    public function adminDelete(): void
+    {
+        $this->requireMethod('DELETE');
+
+        $body = [];
+        try {
+            $body = $this->getJsonBody();
+        } catch (\Throwable $e) {
+            // если нет json — попробуем взять id из query
+        }
+
+        $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
+
+        if ($id <= 0) {
+            $this->json(['ok' => false, 'error' => 'Не передан id кандидата'], 422);
+            return;
+        }
+
+        try {
+            $this->candidates->delete($id);
+            $this->json(['ok' => true]);
+        } catch (Throwable $e) {
+            $this->json(['ok' => false, 'error' => 'Не удалось удалить кандидата'], 500);
+        }
+    }
+
+        public function adminDeleted(): void
+    {
+        $this->requireMethod('GET');
+
+        try {
+            $list = $this->candidates->getAdminCandidates(1);
+            $this->json($list);
+        } catch (Throwable $e) {
+            $this->json(['ok' => false, 'error' => 'Ошибка загрузки удалённых пользователей'], 500);
+        }
+    }
+
+    public function adminEdit(int $id): void
+    {
+        $this->requireMethod('GET');
+
+        try {
+            $candidate = $this->candidates->find($id);
+        } catch (Throwable $e) {
+            http_response_code(404);
+            echo "Кандидат не найден";
+            return;
+        }
+
+        // сделаем массив доступным в шаблоне под переменной $candidate
+        $candidateData = $candidate;
+
+        // подключаем шаблон из public
+        include __DIR__ . '/../../public/candidate-edit.php';
     }
 }

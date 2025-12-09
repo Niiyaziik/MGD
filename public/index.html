@@ -31,7 +31,11 @@
 
                         <li style="display: none">Округа</li>
                     </ul>
-                    <button class="left-side__button" type="button">Вход для администратора</button>
+                    <button class="left-side__button" type="button" id="admin-login-btn">Вход для
+                        администратора</button>
+                    <button class="left-side__button left-side__button--logout" type="button" style="display:none">
+                        Выйти из сессии
+                    </button>
                 </nav>
             </div>
             <main class="main">
@@ -717,7 +721,7 @@
                 ${(c.surname || '') + ' ' + (c.name || '')}<br>${(c.patronymic || '')}
             </h3>
             <div class="candidate-card__role">Кандидат Молодёжной Думы</div>
-            <div class="candidate-card__district">Округ ${(c.district_name || c.district || '')}</div>
+            <div class="candidate-card__district">Округ ${(c.district || '')}</div>
             <div class="candidate-card__email">${(c.email || '')}</div>
             </a>
         </div>
@@ -727,6 +731,45 @@
         </script>
         <script src="./js/load-modals.js"></script>
         <script src="./js/modals.js"></script>
+        <script>
+            // Эта функция вызывается, когда Гугловский скрипт reCAPTCHA загружен
+            function onRecaptchaLoad() {
+                console.log('onRecaptchaLoad: API загружен. grecaptcha =', !!window.grecaptcha);
+
+                // Ждём чуть-чуть, чтобы модалки точно успели подгрузиться
+                setTimeout(() => {
+                    const el = document.querySelector('.g-recaptcha');
+                    console.log('onRecaptchaLoad: найден .g-recaptcha?', !!el);
+
+                    if (el && window.grecaptcha) {
+                        // Если что-то уже отрисовано — не рендерим второй раз
+                        if (!el.hasChildNodes()) {
+                            console.log('onRecaptchaLoad: рендерим виджет reCAPTCHA');
+                            window.grecaptcha.render(el);
+                        } else {
+                            console.log('onRecaptchaLoad: у .g-recaptcha уже есть дети (iframe?)');
+                        }
+                    } else {
+                        console.log('onRecaptchaLoad: либо нет grecaptcha, либо нет div.g-recaptcha');
+                    }
+                }, 300);
+            }
+
+            // На всякий случай ещё раз проверим чуть позже (если модалки загрузились с задержкой)
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const el = document.querySelector('.g-recaptcha');
+                    console.log('window.load: повторная проверка .g-recaptcha =', !!el);
+                    if (el && window.grecaptcha && !el.hasChildNodes()) {
+                        console.log('window.load: рендерим reCAPTCHA повторно');
+                        window.grecaptcha.render(el);
+                    }
+                }, 800);
+            });
+        </script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        <script src="https://unpkg.com/@vkid/sdk@3.0.0/dist-sdk/umd/index.js"></script>
+        <script src="./js/vk-auth.js"></script>
 </body>
 
 </html>

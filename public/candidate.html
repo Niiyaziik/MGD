@@ -31,7 +31,8 @@
 
                         <li style="display: none">Округа</li>
                     </ul>
-                    <button class="left-side__button" type="button">Вход для администратора</button>
+                    <button class="left-side__button" type="button" id="admin-login-btn">Вход для
+                        администратора</button>
                 </nav>
             </div>
             <main id="candidates" class="main_candidates">
@@ -64,7 +65,7 @@
                             const tpl = `
 
                     <div id="candidate" class="content-list__content">
-                        <h1 class="deputat__name">${fio}</h2>
+                        <h1 class="deputat__name candidate-name">${fio}</h1>
                         <div class="all-candidates-list">
                             <a href="/candidates">Все кандидаты</a>
                         </div>
@@ -88,7 +89,7 @@
                                                 ${c.phone || '—'}
                                     </li>
                                 </ul>
-                                <a class="vote-btn-candidate" href="/candidate.php?id=${Number(c.id)}">Проголосовать</a>
+                                <a class="vote-btn-candidate" href="/candidate.php?id=${Number(c.id)}" data-id="${Number(c.id)}">Проголосовать</a>
                             </div>
                             <div class="deputat__about">
                                 <button id="about__more">Показать</button>
@@ -195,6 +196,44 @@
         </div>
         <script src="/js/load-modals.js"></script>
         <script src="/js/modals.js"></script>
+        <script>
+            // Эта функция вызывается, когда Гугловский скрипт reCAPTCHA загружен
+            function onRecaptchaLoad() {
+                console.log('onRecaptchaLoad: API загружен. grecaptcha =', !!window.grecaptcha);
+
+                // Ждём чуть-чуть, чтобы модалки точно успели подгрузиться
+                setTimeout(() => {
+                    const el = document.querySelector('.g-recaptcha');
+                    console.log('onRecaptchaLoad: найден .g-recaptcha?', !!el);
+
+                    if (el && window.grecaptcha) {
+                        // Если что-то уже отрисовано — не рендерим второй раз
+                        if (!el.hasChildNodes()) {
+                            console.log('onRecaptchaLoad: рендерим виджет reCAPTCHA');
+                            window.grecaptcha.render(el);
+                        } else {
+                            console.log('onRecaptchaLoad: у .g-recaptcha уже есть дети (iframe?)');
+                        }
+                    } else {
+                        console.log('onRecaptchaLoad: либо нет grecaptcha, либо нет div.g-recaptcha');
+                    }
+                }, 300);
+            }
+
+            // На всякий случай ещё раз проверим чуть позже (если модалки загрузились с задержкой)
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const el = document.querySelector('.g-recaptcha');
+                    console.log('window.load: повторная проверка .g-recaptcha =', !!el);
+                    if (el && window.grecaptcha && !el.hasChildNodes()) {
+                        console.log('window.load: рендерим reCAPTCHA повторно');
+                        window.grecaptcha.render(el);
+                    }
+                }, 800);
+            });
+        </script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 </body>
 
 </html>

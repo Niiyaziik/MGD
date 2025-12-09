@@ -3,30 +3,20 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use App\Service\AdminAuthService;
+use App\Service\AdminService;
 
 class AdminMiddleware
 {
-    private AdminAuthService $auth;
-
-    public function __construct(AdminAuthService $auth)
-    {
-        $this->auth = $auth;
+    public function __construct(
+        private AdminService $authService
+    ) {
     }
 
-    public function __invoke(): bool
+    public function handle(): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+        if (!$this->authService->check()) {
+            header('Location: /');
+            exit;
         }
-
-        if (!$this->auth->check()) {
-            http_response_code(403);
-
-            echo 'Доступ запрещен. Требуется вход администратора.';
-            return false;
-        }
-
-        return true;
     }
 }

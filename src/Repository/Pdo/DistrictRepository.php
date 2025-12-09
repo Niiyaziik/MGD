@@ -284,10 +284,188 @@ class DistrictRepository implements DistrictRepositoryInterface
         return $st->rowCount();
     }
 
-    public function findDuplicates(): array
+    public function getAdminAddresses(int $deleted = 0): array
     {
-        // если есть поля street+house — верни дубли, иначе – пусто
-        // Под свой кейс можешь заменить запрос
-        return [];
+        $whereDeleted = $deleted === 1
+            ? 'h.deleted_at IS NOT NULL'
+            : 'h.deleted_at IS NULL';
+
+        $sql = "
+            SELECT
+                h.id,
+                d.district        AS district,
+                s.street          AS street,
+                h.house         AS house
+            FROM house h
+            LEFT JOIN streets   s ON h.street_id   = s.id
+            LEFT JOIN districts d ON s.district_id = d.id
+            WHERE $whereDeleted
+            ORDER BY d.district ASC, s.street ASC, h.house ASC
+        ";
+
+        $st = $this->pdo->query($sql);
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+        public function deleteAddress(int $id): void
+    {
+        $st = $this->pdo->prepare("
+            UPDATE house
+            SET deleted_at = NOW()
+            WHERE id = :id AND deleted_at IS NULL
+        ");
+        $st->execute([':id' => $id]);
+    }
+
+    public function findAddressDuplicates(): array
+    {
+        $sql = "
+            SELECT
+                LOWER(TRIM(s.street)) AS street,
+                LOWER(TRIM(h.house))  AS house,
+                GROUP_CONCAT(DISTINCT d.district ORDER BY d.district SEPARATOR ', ') AS districts,
+                GROUP_CONCAT(h.id ORDER BY h.id SEPARATOR ',') AS row_ids,
+                COUNT(DISTINCT d.district) AS district_count
+            FROM house h
+            INNER JOIN streets   s ON h.street_id = s.id
+            INNER JOIN districts d ON s.district_id = d.id
+            WHERE h.deleted_at IS NULL
+            GROUP BY
+                LOWER(TRIM(s.street)),
+                LOWER(TRIM(h.house))
+            HAVING COUNT(DISTINCT d.district) > 1;
+        ";
+
+        $st = $this->pdo->query($sql);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        // вернём только нужные поля
+        return array_map(static function (array $r): array {
+            return [
+                'street'    => $r['street'],
+                'house'     => $r['house'],
+                'districts' => $r['districts'],
+                'row_ids'   => $r['row_ids'],
+            ];
+        }, $rows);
+    }
+
+    public function suggest(string $query): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return [];
+        }
+
+        $like = '%' . mb_strtolower($query, 'UTF-8') . '%';
+
+        // под твою схему:
+        //   house  (id, street_id, house, deleted_at)
+        //   streets(id, street, ...)
+        $sql = "
+            SELECT DISTINCT
+                s.street AS street,
+                h.house  AS house
+            FROM house h
+            INNER JOIN streets s ON h.street_id = s.id
+            WHERE h.deleted_at IS NULL
+              AND (
+                    LOWER(s.street) LIKE :q
+                 OR LOWER(h.house)  LIKE :q
+              )
+            ORDER BY s.street ASC, h.house ASC
+            LIMIT 20
+        ";
+
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':q' => $like]);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        // Нормализуем структуру (на случай лишних полей)
+        return array_map(static fn(array $row): array => [
+            'street' => (string)($row['street'] ?? ''),
+            'house'  => (string)($row['house'] ?? ''),
+        ], $rows);
+    }
+
+    public function findDistrictByStreetAndHouse(string $streetName, string $houseValue): ?array
+    {
+        $streetNorm = mb_strtolower(trim($streetName));
+        $houseNorm  = mb_strtolower(trim($houseValue));
+
+        // 1) Сначала пробуем найти конкретный дом
+        $sqlExact = "
+            SELECT
+                d.id        AS district_id,
+                d.district  AS district_number,
+                s.id        AS street_id,
+                h.id        AS house_id
+            FROM streets s
+            JOIN house   h ON h.street_id = s.id
+            JOIN districts d ON d.id = s.district_id
+            WHERE
+                s.deleted_at IS NULL
+                AND h.deleted_at IS NULL
+                AND d.deleted_at IS NULL
+                AND TRIM(LOWER(s.street)) = :street
+                AND TRIM(LOWER(h.house))  = :house
+            LIMIT 1
+        ";
+
+        $st = $this->pdo->prepare($sqlExact);
+        $st->execute([
+            ':street' => $streetNorm,
+            ':house'  => $houseNorm,
+        ]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+            return [
+                'district_id'     => (int)$row['district_id'],
+                'district_number' => (string)$row['district_number'],
+                'street_id'       => (int)$row['street_id'],
+                'house_id'        => (int)$row['house_id'],
+            ];
+        }
+
+        // 2) Фолбэк: если точный дом не найден, ищем запись "все дома" для этой улицы
+        $sqlAllHouses = "
+            SELECT
+                d.id        AS district_id,
+                d.district  AS district_number,
+                s.id        AS street_id,
+                h.id        AS house_id
+            FROM streets s
+            JOIN house   h ON h.street_id = s.id
+            JOIN districts d ON d.id = s.district_id
+            WHERE
+                s.deleted_at IS NULL
+                AND h.deleted_at IS NULL
+                AND d.deleted_at IS NULL
+                AND TRIM(LOWER(s.street)) = :street
+                AND TRIM(LOWER(h.house))  = 'все дома'
+            LIMIT 1
+        ";
+
+        $st = $this->pdo->prepare($sqlAllHouses);
+        $st->execute([
+            ':street' => $streetNorm,
+        ]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return null;
+        }
+
+        return [
+            'district_id'     => (int)$row['district_id'],
+            'district_number' => (string)$row['district_number'],
+            'street_id'       => (int)$row['street_id'],
+            'house_id'        => (int)$row['house_id'],
+        ];
     }
 }

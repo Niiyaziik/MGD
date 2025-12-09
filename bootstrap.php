@@ -10,22 +10,30 @@ use App\Controller\{
     DistrictController,
     UserController,
     VoteController,
-    AdminController};
+    AdminController,
+    CaptchaController,
+    PhoneCodeController,
+    AuthController};
 use App\Repository\Contract\{
     CandidateRepositoryInterface,
     UserRepositoryInterface,
     VoteRepositoryInterface,
-    DistrictRepositoryInterface
+    DistrictRepositoryInterface,
+    PhoneCodeRepositoryInterface,
+    AdminRepositoryInterface
 };
 use App\Repository\Pdo\{
     CandidateRepository,
     UserRepository,
     VoteRepository,
-    DistrictRepository
+    DistrictRepository,
+    PhoneCodeRepository,
+    AdminRepository
 };
 use App\Service\{
-    VoteService, UserService, CandidateService, AdminAuthService
+    VoteService, UserService, CandidateService, AdminService, SmsService
 };
+use App\Middleware\AdminMiddleware;
 
 $_ENV['DB_DSN']  = 'mysql:host=localhost;port=3306;dbname=mgd;charset=utf8mb4';
 $_ENV['DB_USER'] = 'root';
@@ -147,8 +155,29 @@ $container = new Container();
 $container->set(PDO::class, fn() => Database::pdo());
 
 $container->set(
+    CaptchaController::class,
+    fn($c) => new CaptchaController()
+);
+
+$container->set(AuthController::class,
+    fn ($c) => new AuthController(
+        $c->get(PhoneCodeRepositoryInterface::class),
+        $c->get(CandidateRepositoryInterface::class),
+        $c->get(UserRepositoryInterface::class),
+        $c->get(VoteRepositoryInterface::class),
+        $c->get(DistrictRepositoryInterface::class),
+        $c->get(SmsService::class),
+    )
+);
+
+$container->set(
     CandidateController::class,
     fn($c) => new CandidateController($c->get(CandidateRepositoryInterface::class))
+);
+
+$container->set(
+    UserController::class,
+    fn($c) => new UserController($c->get(UserRepositoryInterface::class))
 );
 
 $container->set(
@@ -158,7 +187,14 @@ $container->set(
 
 $container->set(
     VoteController::class,
-    fn($c) => new VoteController($c->get(VoteRepositoryInterface::class))
+    fn($c) => new VoteController(
+        $c->get(VoteRepositoryInterface::class),
+        $c->get(CandidateRepositoryInterface::class))
+);
+
+$container->set(
+    AdminController::class,
+    fn($c) => new AdminController($c->get(\App\Service\AdminService::class))
 );
 
 $container->set(CandidateRepositoryInterface::class,
@@ -175,6 +211,9 @@ $container->set(DistrictRepositoryInterface::class,
 );
 $container->set(AdminRepositoryInterface::class,
     fn($c) => new AdminRepository($c->get(PDO::class))
+);
+$container->set(PhoneCodeRepositoryInterface::class,
+    fn ($c) => new PhoneCodeRepository($c->get(PDO::class))
 );
 
 $container->set(VoteService::class, fn($c)=> new VoteService(
@@ -195,8 +234,12 @@ $container->set(CandidateService::class, fn($c)=> new CandidateService(
     $c->get(\App\Repository\Contract\DistrictRepositoryInterface::class),
 ));
 
-$container->set(AdminService::class, fn($c)=> new AdminAuthService(
-    $c->get(\App\Repository\Contract\AdminRepositoryInterface::class),
+$container->set(SmsService::class, fn($c)=> new SmsService(
+    $c->get(PhoneCodeRepositoryInterface::class)
+));
+
+$container->set(AdminService::class, fn($c) => new AdminService(
+    $c->get(AdminRepositoryInterface::class),
 ));
 
 $container->set(AdminMiddleware::class,

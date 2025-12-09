@@ -260,4 +260,79 @@ class DistrictController extends BaseController
             $this->json(['ok' => false, 'error' => 'internal error'], 500);
         }
     }
+
+    public function adminIndex(): void
+    {
+        $this->requireMethod('GET');
+
+        $format  = $_GET['format']  ?? null;
+        $deleted = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
+
+        if ($format === 'json') {
+            try {
+                $rows = $this->districts->getAdminAddresses($deleted);
+                $this->json($rows);
+            } catch (Throwable $e) {
+                $this->json(['ok' => false, 'error' => 'Ошибка загрузки адресов'], 500);
+            }
+            return;
+        }
+
+        header_remove('Content-Type');
+        header('Content-Type: text/html; charset=utf-8');
+        include __DIR__ . '/../../public/districts-db.php';
+    }
+
+    public function adminDelete(): void
+    {
+        $this->requireMethod('DELETE');
+
+        $body = [];
+        try {
+            $body = $this->getJsonBody();
+        } catch (Throwable $e) {}
+
+        $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
+
+        if ($id <= 0) {
+            $this->json(['ok' => false, 'error' => 'Не передан id строки'], 422);
+            return;
+        }
+
+        try {
+            $this->districts->deleteAddress($id);
+            $this->json(['ok' => true]);
+        } catch (Throwable $e) {
+            $this->json(['ok' => false, 'error' => 'Не удалось удалить строку'], 500);
+        }
+    }
+
+    public function checkDuplicates(): void
+    {
+        $this->requireMethod('GET');
+
+        try {
+            $duplicates = $this->districts->findAddressDuplicates();
+            $this->json(['ok' => true, 'data' => $duplicates]);
+        } catch (Throwable $e) {
+            $this->json(['ok' => false, 'error' => 'Ошибка проверки базы'], 500);
+        }
+    }
+
+    public function suggest(): void
+    {
+        $this->requireMethod('GET');
+
+        $query = (string)($_GET['query'] ?? '');
+        $query = trim($query);
+
+        if ($query === '') {
+            $this->json([]);
+            return;
+        }
+
+        $list = $this->districts->suggest($query);
+
+        $this->json($list);
+    }
 }

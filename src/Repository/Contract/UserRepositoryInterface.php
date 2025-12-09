@@ -10,4 +10,8 @@ interface UserRepositoryInterface
     public function create(array $data): int;
     public function update(int $id, array $data): void;
     public function delete(int $id): void;
+    public function getAdminUsers(int $deleted = 0): array;
+    public function updateAdminUser(int $id, array $data): void;
+    public function getUserDistrictByAddress(string $street, string $house): ?array;
+
 }

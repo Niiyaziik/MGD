@@ -1333,6 +1333,40 @@ main .content {
   text-decoration: none;
 }
 
+.votes-table-wrapper {
+  width: 100%;
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.votes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  table-layout: auto;
+}
+
+.votes-table th,
+.votes-table td {
+  border: 1px solid #000000;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.votes-table thead th {
+  text-align: left;
+  font-weight: 400;
+  text-align: center;
+}
+
+.votes-table__district {
+  width: 20%;
+  font-size: 25px;
+  text-align: center;
+  vertical-align: top;
+}
+
 .save-btn-candidate {
 
   left: 20px;
@@ -1446,6 +1480,194 @@ main .content {
   transition: all 0.3s ease;
   text-decoration: none;
 }
+
+/* Общий центринг содержимого модалки голосования */
+#vote-success-modal .modal__dialog {
+  text-align: center;
+}
+
+/* Заголовок сверху по центру */
+.vote-modal-title {
+  margin: 16px 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* Обёртка для кандидата */
+.vote-modal-candidate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px 20px;
+}
+
+/* Фото кандидата по центру */
+.vote-modal-photo-wrapper {
+  margin: 8px 0 10px;
+}
+
+.vote-modal-photo {
+  width: 160px;
+  height: 240px;
+  margin: 8px 0 12px;
+  overflow: hidden;
+
+}
+
+/* ФИО по центру голубым цветом */
+.vote-modal-name {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 600;
+  color: #0069d9;
+}
+
+/* Небольшая черта не на всю ширину */
+.vote-modal-separator {
+  width: 100%;
+  margin: 16px auto 20px;
+  border: none;
+  border-top: 1px solid #d0d7e2;
+}
+
+/* Кнопки "Да" и "Отмена" по центру */
+.vote-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+}
+
+/* Стили самих кнопок — можно адаптировать под твой дизайн */
+.vote-modal-btn {
+  min-width: 110px;
+  padding: 8px 18px;
+  border-radius: 4px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.vote-modal-btn--yes {
+  background: #0069d9;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 6px;
+  font-weight: 300;
+  font-size: 25px;
+  border: none;
+  cursor: pointer;
+}
+
+.vote-modal-btn--yes:hover {
+  background: #2d46b8;
+}
+
+.vote-modal-btn-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  object-fit: contain;
+}
+
+.vote-modal-btn--cancel {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 15px;
+  color: #8a8a8a;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.vote-modal-btn--cancel:hover {
+  color: #2d46b8;
+  text-decoration: underline;
+}
+
+#vote-finish-modal .modal__dialog {
+  max-width: 460px;
+  padding: 40px 30px;
+  text-align: center;
+  background: #fff;
+}
+
+.vote-finish-icon img {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 20px;
+}
+
+.vote-finish-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2f66c9;
+  margin-bottom: 12px;
+}
+
+.vote-finish-subtitle {
+  font-size: 18px;
+  color: #333;
+}
+
+.voters-count {
+  display: flex;
+  justify-content: space-between;
+  /* текст слева, блок кнопок справа */
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 12px;
+  font-size: 18px;
+}
+
+.votes-download-btn,
+.votes-deleted-btn {
+  background: #3664db;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.25s ease, transform 0.2s;
+}
+
+.votes-deleted-btn {
+  margin-right: 8px;
+}
+
+.votes-download-btn:hover,
+.votes-deleted-btn:hover {
+  background: #274bb0;
+}
+
+.votes-download-btn:active,
+.votes-deleted-btn:active {
+  transform: scale(0.97);
+}
+
+.votes-table__actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 4px;
+  cursor: pointer;
+}
+
+.icon-png {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+}
+
 
 .content-list__content:first-child {
   display: block;
@@ -1682,6 +1904,197 @@ main .content {
   content: url(https://ugd.ru/local/templates/ugd/img/blocks/arrow-blue.png);
   margin-left: 20px;
   transition: all .3s;
+}
+
+.users-page {
+  max-width: 70%;
+  margin: 20px auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.users-page h1 {
+  margin-bottom: 16px;
+}
+
+.users-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.users-filters__field {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.users-filters__field label {
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.users-filters__field input,
+.users-filters__field select {
+  width: auto;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 90px;
+}
+
+.users-table-wrapper {
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #b1b9c5;
+  border-radius: 4px;
+  overflow: auto;
+  max-height: 600px;
+}
+
+table.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.users-table thead {
+  position: sticky;
+  top: 0;
+  background: #f2f6f8;
+  z-index: 1;
+}
+
+.users-table th,
+.users-table td {
+  border-bottom: 1px solid #e0e4ea;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.users-table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.users-table tr:hover td {
+  background: #f8fafc;
+}
+
+.users-table__actions {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  margin: 0 2px;
+  background: none;
+}
+
+.icon-btn--edit {
+  background: #e0f2fe;
+}
+
+.icon-btn--delete {
+  background: #fee2e2;
+}
+
+.icon-btn span {
+  font-size: 14px;
+}
+
+.users-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.users-footer__info span {
+  display: block;
+}
+
+/* Вся строка находится в режиме редактирования */
+tr.editing td {
+  background: #f4f8ff;
+  /* лёгкий голубой фон */
+}
+
+/* Общий стиль для всех текстовых полей */
+.edit-input {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 14px;
+  border: 1px solid #b7c2d0;
+  border-radius: 4px;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.2s, outline 0.2s;
+}
+
+/* Фокус на редактируемом поле */
+.edit-input:focus {
+  outline: 2px solid #a9c7ff;
+  /* синяя обводка */
+  border-color: #80aaff;
+}
+
+/* Стили кнопок сохранить и отменить */
+.save-btn,
+.cancel-btn {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Кнопка «Сохранить» */
+.save-btn {
+  background: none;
+}
+
+/* Кнопка «Отмена» */
+.cancel-btn {
+  background: none;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn-outline {
+  color: #FFFFFF;
+  background: #3664db;
+}
+
+.btn-outline:hover {
+  background: #274bb0;
 }
 
 .all-news-list {
@@ -2028,6 +2441,37 @@ main .content {
 .address-cell-deleted .address-input {
   text-decoration: line-through;
   opacity: 0.6;
+}
+
+.address-suggest {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid #d3dae5;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  margin-top: 4px;
+}
+
+.address-suggest__item {
+  padding: 6px 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.address-suggest__item:hover {
+  background: #f3f6ff;
+}
+
+.btn-disabled,
+.left-side__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .street-cell {

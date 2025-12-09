@@ -11,6 +11,9 @@ interface DistrictRepositoryInterface
     public function updateHouse(int $districtId, string $street, string $oldHouse, string $newHouse): int;
     public function deleteHouse(int $districtId, string $street, string $house): int;
 
-    /** Поиск дублей по street+house (если у тебя есть такие поля) */
-    public function findDuplicates(): array;
+    public function getAdminAddresses(int $deleted = 0): array;
+    public function deleteAddress(int $id): void;
+    public function findAddressDuplicates(): array;
+    public function suggest(string $query): array;
+    public function findDistrictByStreetAndHouse(string $streetName, string $houseValue): ?array;
 }
