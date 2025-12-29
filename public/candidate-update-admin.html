@@ -63,8 +63,8 @@
                                         <img id="photo-preview" class="deputat__image"
                                             src="<?= $candidate['photo'] ? $candidate['photo'] : '/assets/img/candidates/placeholderAddCandidate.png' ?>"
                                             alt="Фото кандидата">
-                                        <!-- <button type="button" class="photo-change-btn" id="photo-change-btn">Изменить
-                                            фото</button> -->
+                                        <button type="button" class="photo-change-btn" id="photo-change-btn">Изменить
+                                            фото</button>
                                     </div>
                                 </div>
                                 <input type="file" id="photo-input" name="photo" accept="image/*" hidden>
@@ -215,6 +215,41 @@
                     title="agatech.ru">AGATECH</a>
             </div>
         </div>
+        <!-- Модалка кадрирования фото (3:4) -->
+        <div id="cropper-modal" class="cropper-modal" hidden>
+            <div class="cropper-modal__backdrop"></div>
+
+            <div class="cropper-modal__panel" role="dialog" aria-modal="true">
+                <div class="cropper-modal__header">
+                    <div class="cropper-modal__title">Кадрирование фото (3:4)</div>
+                    <button type="button" id="cropper-close" class="cropper-modal__close"
+                        aria-label="Закрыть">×</button>
+                </div>
+
+                <div class="cropper-modal__body">
+                    <div class="cropper-canvas-wrap">
+                        <canvas id="cropper-canvas"></canvas>
+
+                        <!-- Кнопки зума прямо НА фото справа -->
+                        <button type="button" id="cropper-zoom-in" class="cropper-zoom-btn" title="Увеличить">+</button>
+                        <button type="button" id="cropper-zoom-out" class="cropper-zoom-btn"
+                            title="Уменьшить">−</button>
+
+                    </div>
+
+                    <div class="cropper-controls__hint">
+                        Перетаскивай фото мышью/пальцем. Кадр будет строго 3:4.
+                    </div>
+                </div>
+
+                <div class="cropper-modal__footer">
+                    <button type="button" id="cropper-cancel" class="cropper-btn cropper-btn--ghost">Отмена</button>
+                    <button type="button" id="cropper-apply" class="cropper-btn cropper-btn--primary">Применить</button>
+                </div>
+            </div>
+        </div>
+
+
         <script src="/js/load-modals.js"></script>
         <script src="/js/modals.js"></script>
         <script src="/js/photoDialog.js"></script>

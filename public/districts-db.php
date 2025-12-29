@@ -14,34 +14,8 @@
     <div class="users-page">
         <h1>Округа</h1>
 
-        <!-- Фильтры и сортировка -->
+        <!-- Фильтры (только поиск по улице) -->
         <div class="users-filters">
-            <!-- Сортировка -->
-            <div class="users-filters__field">
-                <label for="sort-field">Сортировать по:</label>
-                <select id="sort-field">
-                    <option value="district">Округ</option>
-                    <option value="street">Улица</option>
-                </select>
-            </div>
-
-            <div class="users-filters__field">
-                <label for="sort-dir">Порядок:</label>
-                <select id="sort-dir">
-                    <option value="asc">По возрастанию</option>
-                    <option value="desc">По убыванию</option>
-                </select>
-            </div>
-
-            <!-- Фильтр по округу -->
-            <div class="users-filters__field">
-                <label for="district-filter">Округ:</label>
-                <select id="district-filter">
-                    <option value="">Все округа</option>
-                    <!-- заполним из данных -->
-                </select>
-            </div>
-
             <!-- Поиск по улице -->
             <div class="users-filters__field">
                 <label for="street-search">Поиск по улице:</label>
@@ -54,10 +28,26 @@
             <table class="users-table">
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Округ</th>
-                    <th>Улица</th>
-                    <th>Дом</th>
+                    <th class="sortable-header" data-field="id">
+                        <span>ID</span>
+                        <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                        <span class="sort-indicator"></span>
+                    </th>
+                    <th class="sortable-header" data-field="district">
+                        <span>Округ</span>
+                        <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                        <span class="sort-indicator"></span>
+                    </th>
+                    <th class="sortable-header" data-field="street">
+                        <span>Улица</span>
+                        <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                        <span class="sort-indicator"></span>
+                    </th>
+                    <th class="sortable-header" data-field="house">
+                        <span>Дом</span>
+                        <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                        <span class="sort-indicator"></span>
+                    </th>
                     <th>Действия</th>
                 </tr>
                 </thead>

@@ -816,10 +816,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const finishModalEl = document.getElementById("vote-finish-modal");
         if (finishModalEl) {
           openModal(finishModalEl);
-          // автоматически закрываем через 2 секунды
-          setTimeout(() => {
+          setTimeout(async () => {
             closeModal(finishModalEl);
-          }, 2000);
+            await fetch("/auth/logout", {
+              method: "POST",
+              headers: { "Accept": "application/json" }
+            }).catch(() => { });
+          }, 3000);
         } else {
           alert("Ваш голос принят. Спасибо за участие!");
         }

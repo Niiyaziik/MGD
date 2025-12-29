@@ -15,29 +15,8 @@
 
                 <h1>Пользователи</h1>
 
-                <!-- Панель фильтров и сортировки -->
+                <!-- Панель фильтров (только дата регистрации и поиск по фамилии) -->
                 <div class="users-filters">
-
-                    <!-- Сортировка -->
-                    <div class="users-filters__field">
-                        <label for="sort-field">Сортировать по:</label>
-                        <select id="sort-field">
-                            <option value="registration_date">Дата регистрации</option>
-                            <option value="auth_method">Метод авторизации</option>
-                            <option value="surname">Фамилия</option>
-                            <option value="street">Улица проживания</option>
-                            <option value="district">Округ</option>
-                        </select>
-                    </div>
-
-                    <div class="users-filters__field">
-                        <label for="sort-dir">Порядок:</label>
-                        <select id="sort-dir">
-                            <option value="desc">По убыванию</option>
-                            <option value="asc">По возрастанию</option>
-                        </select>
-                    </div>
-
                     <!-- Период регистрации -->
                     <div class="users-filters__field">
                         <label>Период регистрации (от):</label>
@@ -46,24 +25,6 @@
                     <div class="users-filters__field">
                         <label>Период регистрации (до):</label>
                         <input type="date" id="date-to">
-                    </div>
-
-                    <!-- Метод авторизации -->
-                    <div class="users-filters__field">
-                        <label for="auth-method-filter">Метод авторизации:</label>
-                        <select id="auth-method-filter">
-                            <option value="">Все методы</option>
-                            <!-- опции заполним из данных -->
-                        </select>
-                    </div>
-
-                    <!-- Округ -->
-                    <div class="users-filters__field">
-                        <label for="district-filter">Округ:</label>
-                        <select id="district-filter">
-                            <option value="">Все округа</option>
-                            <!-- опции заполним из данных -->
-                        </select>
                     </div>
 
                     <!-- Поиск по фамилии -->
@@ -78,17 +39,53 @@
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th class="sortable-header" data-field="id">
+                                    <span>ID</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
                                 <th>Дата регистрации</th>
-                                <th>Метод авторизации</th>
-                                <th>Фамилия</th>
-                                <th>Имя</th>
-                                <th>Отчество</th>
-                                <th>Телефон</th>
+                                <th class="sortable-header" data-field="auth_method">
+                                    <span>Метод авторизации</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-field="surname">
+                                    <span>Фамилия</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-field="name">
+                                    <span>Имя</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-field="patronymic">
+                                    <span>Отчество</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-field="phone">
+                                    <span>Телефон</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
                                 <th>ВК</th>
-                                <th>Улица</th>
-                                <th>Дом</th>
-                                <th>Округ</th>
+                                <th class="sortable-header" data-field="street">
+                                    <span>Улица</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-field="house">
+                                    <span>Дом</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-field="district">
+                                    <span>Округ</span>
+                                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                                    <span class="sort-indicator"></span>
+                                </th>
                                 <th colspan="2" style="text-align:center;">Действия</th>
                             </tr>
                         </thead>

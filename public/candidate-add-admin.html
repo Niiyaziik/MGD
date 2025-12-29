@@ -199,6 +199,32 @@
                     title="agatech.ru">AGATECH</a>
             </div>
         </div>
+        <!-- Модалка кадрирования фото (3:4) -->
+        <div id="cropper-modal" class="cropper-modal" hidden>
+            <div class="cropper-modal__backdrop"></div>
+
+            <div class="cropper-modal__panel" role="dialog" aria-modal="true">
+                <div class="cropper-modal__header">
+                    <div class="cropper-modal__title">Кадрирование фото</div>
+                    <button type="button" id="cropper-close" class="cropper-modal__close"
+                        aria-label="Закрыть">×</button>
+                </div>
+
+                <div class="cropper-modal__body">
+                    <div class="cropper-canvas-wrap">
+                        <canvas id="cropper-canvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="cropper-modal__footer">
+                    <button type="button" id="cropper-cancel" class="cropper-btn cropper-btn--ghost">Отмена</button>
+                    <button type="button" id="cropper-apply" class="cropper-btn cropper-btn--primary">Применить</button>
+                </div>
+            </div>
+        </div>
+
+
+
         <script src="/js/load-modals.js"></script>
         <script src="/js/modals.js"></script>
         <script src="/js/photoDialog.js"></script>

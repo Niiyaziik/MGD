@@ -388,8 +388,19 @@ class AuthController extends BaseController
     {
         $this->requireMethod('POST');
 
-        unset($_SESSION['voter']);
-        session_regenerate_id(true);
+        // Проверяем, активна ли сессия
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            // Очищаем все данные сессии
+            $_SESSION = [];
+            
+            // Удаляем cookie сессии
+            if (isset($_COOKIE[session_name()])) {
+                setcookie(session_name(), '', time() - 3600, '/');
+            }
+            
+            // Полностью уничтожаем сессию
+            session_destroy();
+        }
 
         $this->json(['ok' => true]);
     }

@@ -3,17 +3,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const API_URL = "/candidates/admin/index?format=json&deleted=0";
 
     const tbody = document.getElementById("candidates-tbody");
-    const sortFieldSelect = document.getElementById("sort-field");
-    const sortDirSelect = document.getElementById("sort-dir");
     const dateFromInput = document.getElementById("date-from");
     const dateToInput = document.getElementById("date-to");
-    const districtFilter = document.getElementById("district-filter");
     const surnameSearch = document.getElementById("surname-search");
 
     const foundCountEl = document.getElementById("found-count");
     const totalCountEl = document.getElementById("total-count");
 
     let allCandidates = [];
+    let currentSortField = null;
+    let currentSortDir = null;
 
     // Загружаем данные
     try {
@@ -27,40 +26,62 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Заполняем селект "Округ" из данных
-    fillDistrictFilter(allCandidates);
-
     // Общее количество
     totalCountEl.textContent = allCandidates.length.toString();
+
+    // Инициализация обработчиков кликов на заголовки
+    initSortableHeaders();
 
     // Первый рендер
     applyAndRender();
 
     // События фильтров
-    [sortFieldSelect, sortDirSelect].forEach(el => {
-        el.addEventListener("change", applyAndRender);
-    });
-
-    [dateFromInput, dateToInput, districtFilter].forEach(el => {
+    [dateFromInput, dateToInput].forEach(el => {
         el.addEventListener("change", applyAndRender);
     });
 
     surnameSearch.addEventListener("input", applyAndRender);
 
-    function fillDistrictFilter(list) {
-        const distSet = new Set();
-        list.forEach(c => {
-            if (c.district) distSet.add(c.district);
-        });
-
-        Array.from(distSet)
-            .sort((a, b) => String(a).localeCompare(String(b), "ru"))
-            .forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d;
-                opt.textContent = d;
-                districtFilter.appendChild(opt);
+    function initSortableHeaders() {
+        const headers = document.querySelectorAll(".sortable-header");
+        headers.forEach(header => {
+            header.style.cursor = "pointer";
+            header.addEventListener("click", () => {
+                const field = header.dataset.field;
+                handleHeaderClick(field, header);
             });
+        });
+    }
+
+    function handleHeaderClick(field, headerElement) {
+        // Если уже сортируем по этому полю, меняем направление
+        if (currentSortField === field) {
+            currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+        } else {
+            currentSortField = field;
+            currentSortDir = "asc";
+        }
+
+        // Обновляем визуальные индикаторы
+        updateSortIndicators();
+
+        applyAndRender();
+    }
+
+    function updateSortIndicators() {
+        const headers = document.querySelectorAll(".sortable-header");
+        headers.forEach(header => {
+            const indicator = header.querySelector(".sort-indicator");
+            const field = header.dataset.field;
+            
+            if (currentSortField === field) {
+                indicator.textContent = currentSortDir === "asc" ? " ↑" : " ↓";
+                header.classList.add("sorted");
+            } else {
+                indicator.textContent = "";
+                header.classList.remove("sorted");
+            }
+        });
     }
 
     function applyAndRender() {
@@ -87,12 +108,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
-        // Фильтр по округу
-        const distVal = districtFilter.value;
-        if (distVal) {
-            list = list.filter(c => String(c.district) === String(distVal));
-        }
-
         // Поиск по фамилии
         const q = surnameSearch.value.trim().toLowerCase();
         if (q) {
@@ -100,9 +115,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Сортировка
-        const sortField = sortFieldSelect.value;
-        const sortDir = sortDirSelect.value;
-        list.sort((a, b) => compareCandidates(a, b, sortField, sortDir));
+        if (currentSortField) {
+            list.sort((a, b) => compareCandidates(a, b, currentSortField, currentSortDir));
+        }
 
         // Обновляем "найдено"
         foundCountEl.textContent = list.length.toString();
