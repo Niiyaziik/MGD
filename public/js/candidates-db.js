@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers.forEach(header => {
             const indicator = header.querySelector(".sort-indicator");
             const field = header.dataset.field;
-            
+
             if (currentSortField === field) {
                 indicator.textContent = currentSortDir === "asc" ? " ↑" : " ↓";
                 header.classList.add("sorted");
@@ -129,6 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function compareCandidates(a, b, field, dir) {
         const mul = dir === "asc" ? 1 : -1;
 
+        // ===== ДАТА =====
         if (field === "registration_date") {
             const da = a.registration_date ? new Date(a.registration_date) : null;
             const db = b.registration_date ? new Date(b.registration_date) : null;
@@ -138,8 +139,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             return (da - db) * mul;
         }
 
-        const va = (a[field] ?? "").toString().toLowerCase();
-        const vb = (b[field] ?? "").toString().toLowerCase();
+        const vaRaw = a[field];
+        const vbRaw = b[field];
+
+        // ===== ЧИСЛА =====
+        const na = Number(vaRaw);
+        const nb = Number(vbRaw);
+
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+            return (na - nb) * mul;
+        }
+
+        // ===== СТРОКИ =====
+        const va = (vaRaw ?? "").toString().toLowerCase();
+        const vb = (vbRaw ?? "").toString().toLowerCase();
+
         if (va < vb) return -1 * mul;
         if (va > vb) return 1 * mul;
         return 0;
@@ -208,8 +222,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 `;
 
     }
-
-    // Удаление кандидата (deleted_at = NOW() на бэке)
     document.addEventListener("click", async (e) => {
         const delBtn = e.target.closest(".delete-candidate-btn");
         if (!delBtn) return;
@@ -231,7 +243,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const out = await res.json().catch(() => ({}));
 
         if (!res.ok || out.ok === false) {
-            alert("Ошибка удаления: " + (out.error || "Неизвестная ошибка"));
+            showMessage("Ошибка удаления: " + (out.error || "Неизвестная ошибка"), "Ошибка");
             return;
         }
 
@@ -240,4 +252,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         totalCountEl.textContent = allCandidates.length.toString();
         applyAndRender();
     });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const downloadBtn = document.querySelector(".votes-download-btn");
+    if (downloadBtn) {
+        downloadBtn.addEventListener("click", () => {
+            window.location.href = "/candidates/admin/export";
+        });
+    }
 });

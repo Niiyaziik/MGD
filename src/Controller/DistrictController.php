@@ -8,7 +8,10 @@ use Throwable;
 
 class DistrictController extends BaseController
 {
-    public function __construct(private DistrictRepositoryInterface $districts) {}
+    public function __construct(
+        private DistrictRepositoryInterface $districts,
+        private ?object $container = null
+    ) {}
 
     public function index(): void
     {
@@ -28,9 +31,7 @@ class DistrictController extends BaseController
             }
     }
 
-    header_remove('Content-Type');
-    header('Content-Type: text/html; charset=utf-8');
-    readfile(__DIR__ . '/../../public/districts.html');
+    require __DIR__ . '/../../public/district/districts.php';
     }
 
     public function indexAdmin(): void
@@ -51,9 +52,7 @@ class DistrictController extends BaseController
             }
     }
 
-    header_remove('Content-Type');
-    header('Content-Type: text/html; charset=utf-8');
-    readfile(__DIR__ . '/../../public/districts-admin.html');
+    require __DIR__ . '/../../public/district-admin/districts-admin.php';
     }
 
 
@@ -88,10 +87,8 @@ class DistrictController extends BaseController
             }
         }
 
-        header_remove('Content-Type');
-        header('Content-Type: text/html; charset=utf-8');
-        readfile(__DIR__ . '/../../public/district.html');
-        }
+        require __DIR__ . '/../../public/district/district.php';
+    }
 
     public function showAdmin(string $id): void
     {
@@ -130,9 +127,7 @@ class DistrictController extends BaseController
             }
         }
 
-        header_remove('Content-Type');
-        header('Content-Type: text/html; charset=utf-8');
-        readfile(__DIR__ . '/../../public/district-admin.html');
+        require __DIR__ . '/../../public/district-admin/district-admin.php';
     }
 
 
@@ -278,9 +273,7 @@ class DistrictController extends BaseController
             return;
         }
 
-        header_remove('Content-Type');
-        header('Content-Type: text/html; charset=utf-8');
-        include __DIR__ . '/../../public/districts-db.php';
+        require __DIR__ . '/../../public/district-db/districts-db.php';
     }
 
     public function adminDelete(): void
@@ -307,6 +300,24 @@ class DistrictController extends BaseController
         }
     }
 
+    public function adminDeleted(): void
+    {
+        $this->requireMethod('GET');
+
+        $format  = $_GET['format']  ?? null;
+
+        if ($format === 'json') {
+            try {
+                $list = $this->candidates->getAdminCandidates(1);
+                $this->json($list);
+            } catch (Throwable $e) {
+                $this->json(['ok' => false, 'error' => 'Ошибка загрузки удалённых пользователей'], 500);
+            }
+            return;
+        }
+        require __DIR__ . '/../../public/district-db/deleted-districts.php';
+    }
+
     public function checkDuplicates(): void
     {
         $this->requireMethod('GET');
@@ -331,8 +342,54 @@ class DistrictController extends BaseController
             return;
         }
 
-        $list = $this->districts->suggest($query);
+        // Используем подсказки из базы данных
+        try {
+            $list = $this->districts->suggest($query);
+            $this->json($list);
+        } catch (\Throwable $e) {
+            error_log('[DistrictController::suggest] DB error: ' . $e->getMessage());
+            $this->json([]);
+        }
+    }
 
-        $this->json($list);
+    /**
+     * Тестовый метод для проверки работы FIAS API
+     */
+    public function testFias(): void
+    {
+        $this->requireMethod('GET');
+        
+        $testQuery = $_GET['query'] ?? 'Ленина';
+        
+        $result = [
+            'query' => $testQuery,
+            'container_exists' => $this->container !== null,
+            'fias_service' => null,
+            'fias_result' => [],
+            'db_result' => [],
+            'errors' => []
+        ];
+        
+        // Проверяем FIAS
+        if ($this->container) {
+            try {
+                $fiasService = $this->container->get(\App\Service\FiasService::class);
+                $result['fias_service'] = get_class($fiasService);
+                $result['fias_result'] = $fiasService->searchAddresses($testQuery);
+            } catch (\Throwable $e) {
+                $result['errors'][] = 'FIAS error: ' . $e->getMessage();
+            }
+        } else {
+            $result['errors'][] = 'Container is null';
+        }
+        
+        // Проверяем БД
+        try {
+            $result['db_result'] = $this->districts->suggest($testQuery);
+        } catch (\Throwable $e) {
+            $result['errors'][] = 'DB error: ' . $e->getMessage();
+        }
+        
+        $this->json($result);
     }
 }

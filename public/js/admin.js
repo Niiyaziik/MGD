@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const out = await resp.json().catch(() => ({}));
 
             if (!resp.ok || out.ok === false) {
-                alert(out.error || "Ошибка выхода администратора");
+                showMessage(out.error || "Ошибка выхода администратора", "Ошибка");
                 return;
             }
 
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (err) {
             console.error("Logout error:", err);
-            alert("Ошибка сети при выходе администратора.");
+            showMessage("Ошибка сети при выходе администратора.", "Ошибка");
         }
     });
 });

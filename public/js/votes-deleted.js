@@ -57,17 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const countSpan = document.createElement("span");
         countSpan.textContent = `Количество удалённых голосов: ${data.length}`;
 
-        // 🔹 Кнопка "Активные" — возвращаемся на обычный список
-        const activeBtn = document.createElement("button");
-        activeBtn.type = "button";
-        activeBtn.className = "votes-deleted-btn"; // тот же стиль, что для "Удалённые"
-        activeBtn.textContent = "Активные";
-        activeBtn.addEventListener("click", () => {
-            window.location.href = "/votes/admin";
-        });
-
         votersInfo.appendChild(countSpan);
-        votersInfo.appendChild(activeBtn);
 
         container.prepend(votersInfo);
 

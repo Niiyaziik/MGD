@@ -421,3 +421,6 @@ FodyWeavers.xsd
 *.msp
 
 /vendor/
+
+# Database query logs
+db_queries.log

@@ -18,10 +18,10 @@
 
 
 
-
+/*
 @font-face {
   font-family: "PTAstra";
-  src: url("/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-Regular.ttf");
+  src: url("https://ugd.ru/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-Regular.ttf");
   font-style: normal;
   font-weight: normal;
   font-display: swap;
@@ -29,7 +29,7 @@
 
 @font-face {
   font-family: "PTAstra";
-  src: url("/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-Bold.ttf");
+  src: url("https://ugd.ru/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-Bold.ttf");
   font-style: normal;
   font-weight: bold;
   font-display: swap;
@@ -37,7 +37,7 @@
 
 @font-face {
   font-family: "PTAstra";
-  src: url("/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-Italic.ttf");
+  src: url("https://ugd.ru/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-Italic.ttf");
   font-style: italic;
   font-weight: normal;
   font-display: swap;
@@ -45,19 +45,31 @@
 
 @font-face {
   font-family: "PTAstra";
-  src: url("/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-BoldItalic.ttf");
+  src: url("https://ugd.ru/local/templates/ugd/css/../fonts/ptastraserif/PTAstraSerif-BoldItalic.ttf");
   font-style: italic;
   font-weight: bold;
   font-display: swap;
 }
-
+*/
 html {
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: PTAstra;
+  font-family: var(--bs-font-sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+body {
+  margin: 0;
+  font-family: "PTAstra";
   font-style: normal;
   color: #000000;
   background-color: #ffffff;
@@ -89,6 +101,11 @@ ul {
   -webkit-padding-start: 0px;
   padding-inline-start: 0px;
   list-style-type: none;
+}
+
+a {
+  color: #0d6efd;
+  text-decoration: underline;
 }
 
 p {
@@ -210,6 +227,27 @@ header.bx-shadow {
   margin-right: inherit;
 }
 
+.admin-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background-color: #2d81e0;
+  color: #fff;
+  text-decoration: none;
+  font: 14px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  cursor: pointer;
+  transition: background-color 0.5s ease;
+}
+
+.admin-logout-btn:hover {
+  background-color: #21476f;
+}
+
 .head-block__list-check {
   font-size: 20px;
   position: absolute;
@@ -304,7 +342,7 @@ header.bx-shadow {
 }
 
 .head-block__twitter::before {
-  content: url(/local/templates/ugd/css/../img/icons/twitter.svg);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/icons/twitter.svg);
   margin-right: 5px;
 }
 
@@ -376,8 +414,6 @@ header.bx-shadow {
   left: -60px;
 }*/
 
-/*ÐºÐ¾Ð½ÐµÑ† Ñ…ÐµÐ´ÐµÑ€*/
-/*Ñ‚ÐµÐ»Ð¾ ÑÐ°Ð¹Ñ‚Ð°*/
 .site-body {
   min-height: 900px;
   display: -webkit-box;
@@ -393,10 +429,11 @@ header.bx-shadow {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   margin-top: 100px;
   position: relative;
+  padding-left: calc(50% - 600px);
 }
 
 .site-body.hide-left-menu {
@@ -495,20 +532,22 @@ header.bx-shadow {
 
 }
 
-/*.left-side__search {
-	width: 100%;
-	box-sizing: border-box;
-	background: #F3F9FF;
-  display: flex;justify-content: center;
+.left-side__search {
+  width: 100%;
+  box-sizing: border-box;
+  background: #F3F9FF;
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
+
 .left-side__search input {
   display: block;
   width: 100% !important;
   height: 42px;
   background: #F3F9FF;
   -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   font-style: italic;
   font-weight: normal;
   font-size: 16px;
@@ -521,29 +560,32 @@ header.bx-shadow {
   flex: 0 0 auto !important;
   text-align: center;
   position: relative;
-  background: transparent url(/local/templates/ugd/img/blocks/search-blue.png) no-repeat 0px center;
+  background: transparent url(https://ugd.ru/local/templates/ugd/img/blocks/search-blue.png) no-repeat 0px center;
   background-color: #F3F9FF;
   outline: none;
   border: 0px solid rgb(206, 212, 218);
 }
+
 .left-side__search input:focus,
 .left-side__search input:active {
-	background: transparent url(/local/templates/ugd/img/blocks/!search-blue.png) no-repeat 45px center;
-	text-align: left;
-	outline: none;
+  background: transparent url(https://ugd.ru/local/templates/ugd/img/blocks/!search-blue.png) no-repeat 45px center;
+  text-align: left;
+  outline: none;
 }
+
 .left-side__search input.form-control:focus {
-	box-shadow: 0 0 0 0rem rgb(13 110 253 / 25%);
+  box-shadow: 0 0 0 0rem rgb(13 110 253 / 25%);
 
 }
+
 .left-side__search input:focus::placeholder,
 .left-side__search input:active::placeholder {
-	opacity: 0;
+  opacity: 0;
 }
 
 .left-side__search .input-group-append {
   display: none;
-}*/
+}
 
 .left-side__navigation {
   margin-top: 20px;
@@ -717,9 +759,6 @@ header.bx-shadow {
   color: #000000;
 }
 
-
-/*ÐºÐ¾Ð½ÐµÑ† Ð»ÐµÐ²Ð¾Ð¹ ÑÑ‚Ð¾Ñ€Ð¾Ð½Ñ‹*/
-/*main*/
 main {
   width: 100%;
   max-width: 1200px;
@@ -792,6 +831,7 @@ main .content {
 
 .main-slider__title {
   font-size: 32px;
+  font-weight: 100;
   color: #ffffff;
   margin-bottom: 20px;
   padding-bottom: 15px;
@@ -802,6 +842,7 @@ main .content {
   font-weight: 400;
   font-size: 16px;
   color: #ffffff;
+  margin-top: 0;
   margin-bottom: 10px;
   line-height: 150%;
 }
@@ -853,15 +894,19 @@ main .content {
   bottom: -5px;
 }
 */
-/*Ð¢Ð°Ð±Ñ‹*/
+.news-cats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 #candidates.main_candidates {
   width: 100%;
   max-width: 1200px;
   -webkit-transition: all 0.3s;
   -o-transition: all 0.3s;
   transition: all 0.3s;
-  margin-left: 250px;
-  margin-bottom: 50px;
+  margin-left: 10%;
 }
 
 #candidate.main_candidates {
@@ -932,7 +977,8 @@ main .content {
   width: 100%;
   min-height: 100px;
   box-sizing: border-box;
-
+  align-items: center;
+  justify-content: space-between;
 }
 
 #news.content-list__content {
@@ -1018,7 +1064,7 @@ main .content {
 
 .districts-grid {
   display: grid;
-  grid-template-columns: repeat(10, auto);
+  grid-template-columns: repeat(auto-fit, minmax(77px, 1fr));
   row-gap: 16px;
   column-gap: 32px;
 }
@@ -1097,8 +1143,8 @@ main .content {
 .candidate-add__figure {
   box-sizing: border-box;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  background: url('/assets/img/candidates/placeholderAdd.png') center/80% no-repeat;
+  height: 240px;
+  background: url('/assets/img/candidates/placeholderAdd.png');
   position: relative;
   overflow: hidden;
   padding: 12px;
@@ -1114,12 +1160,16 @@ main .content {
 .candidate-add-placeholder {
   position: absolute;
   inset: 0;
-  background: url('/assets/img/candidates/placeholderAddCandidate.png') center/80% no-repeat;
+  background: url('/assets/img/candidates/placeholderAddCandidate.png') center no-repeat;
   opacity: 0;
   transition: opacity .25s ease;
 }
 
 .candidate-card:hover .candidate-add-placeholder {
+  opacity: 1;
+}
+
+.my-deputat__item:hover .candidate-add-placeholder {
   opacity: 1;
 }
 
@@ -1244,13 +1294,18 @@ main .content {
 
 .candidate-card__body-new {
   display: block;
-  /* padding: 18px 16px 22px; */
+  margin-top: 29px;
   text-align: center;
   color: #0069d9;
   text-decoration: none;
   font-size: 23px;
   line-height: 1.25;
   font-weight: 800;
+}
+
+.candidate-card__body-new:hover {
+  color: red;
+  text-decoration: underline;
 }
 
 .candidate-card__add {
@@ -1314,6 +1369,11 @@ main .content {
   opacity: 1;
 }
 
+.my-deputat__item:hover .vote-btn-update {
+  opacity: 1;
+}
+
+
 .vote-btn-candidate {
 
   left: 20px;
@@ -1337,6 +1397,10 @@ main .content {
   width: 100%;
   margin-top: 20px;
   overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #b1b9c5;
+  border-radius: 4px;
 }
 
 .votes-table {
@@ -1352,6 +1416,50 @@ main .content {
   border: 1px solid #000000;
   padding: 8px 12px;
   text-align: center;
+}
+
+.votes-table thead {
+  position: sticky;
+  top: 0;
+  background: #f2f6f8;
+  z-index: 1;
+}
+
+.votes-table th.sortable-header {
+  position: relative;
+  user-select: none;
+}
+
+.votes-table th.sortable-header:hover {
+  background-color: #e8ecf0;
+}
+
+.votes-table th.sortable-header.sorted {
+  background-color: #dde7f0;
+}
+
+.votes-table th.sortable-header .sort-indicator {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  color: #3654db;
+  font-weight: bold;
+}
+
+.votes-table th.sortable-header span:first-child {
+  display: inline-block;
+}
+
+.votes-table th.sortable-header .filter-icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  opacity: 0.6;
+  vertical-align: middle;
+}
+
+.votes-table th.sortable-header:hover .filter-icon {
+  opacity: 1;
 }
 
 .votes-table thead th {
@@ -1419,38 +1527,36 @@ main .content {
 
 .vote-btn-update {
   position: absolute;
-  top: 80%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 100;
   border: none;
   border-radius: 6px;
+  bottom: 45%;
   cursor: pointer;
   background-color: #0069d9;
-  color: #fff;
   opacity: 0;
   transition: all 0.3s ease;
   text-decoration: none;
+  pointer-events: none;
+  margin-top: 80%;
 }
 
 .vote-btn {
   position: absolute;
-  top: 80%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 100;
   border: none;
   border-radius: 6px;
+  bottom: 45%;
   cursor: pointer;
   background-color: #0069d9;
-  color: #fff;
   opacity: 0;
   transition: all 0.3s ease;
   text-decoration: none;
+  pointer-events: none;
+  margin-top: 80%;
 }
 
 .vote-btn:hover,
@@ -1680,9 +1786,11 @@ main .content {
 
 .content-list__candidates_title {
   font-weight: bold;
-  color: #000;
-  font-size: 35px;
+  font-size: 30px;
   width: 60%;
+  margin: 0;
+  display: flex;
+  align-items: center;
 }
 
 .content-list__districts_title {
@@ -1693,7 +1801,7 @@ main .content {
   margin-bottom: 50px;
 }
 
-.news-cats {
+.swiper-slide {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1717,17 +1825,17 @@ main .content {
 }
 
 .news-cats__item.news::before {
-  content: url(/local/templates/ugd/css/../img/pages/main/news-icon.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/pages/main/news-icon.png);
   margin-right: 5px;
 }
 
 .news-cats__item.spam::before {
-  content: url(/local/templates/ugd/css/../img/pages/main/spam.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/pages/main/spam.png);
   margin-right: 5px;
 }
 
 .news-cats__item.smi::before {
-  content: url(/local/templates/ugd/css/../img/pages/main/smi.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/pages/main/smi.png);
   margin-right: 5px;
 }
 
@@ -1856,7 +1964,7 @@ main .content {
 }
 
 .news-list__cat.news::before {
-  content: url(/local/templates/ugd/css/../img/pages/main/news-icon.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/pages/main/news-icon.png);
   margin-right: 5px;
 }
 
@@ -1882,8 +1990,8 @@ main .content {
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
-  font-size: 26px;
-  margin-bottom: 20px;
+  font-size: 22px;
+  height: 100%;
 }
 
 .all-candidates-list a {
@@ -2026,6 +2134,12 @@ table.users-table {
   text-align: center;
 }
 
+.users-table th:last-child,
+.users-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -2134,6 +2248,19 @@ tr.editing td {
   background: #274bb0;
 }
 
+/* Стиль для кнопки "Удалённые" - синий текст, белый фон, синяя граница */
+.users-footer__buttons .btn-outline {
+  color: #3654db;
+  background: #FFFFFF;
+  border: 1px solid #3654db;
+}
+
+.users-footer__buttons .btn-outline:hover {
+  color: #FFFFFF;
+  background: #3654db;
+  border: 1px solid #3654db;
+}
+
 .all-news-list {
   color: #247CCD;
   display: -webkit-box;
@@ -2145,7 +2272,7 @@ tr.editing td {
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
-  font-size: 26px;
+  font-size: 22px;
   color: #247CCD;
   margin-bottom: 20px;
 }
@@ -2969,9 +3096,13 @@ input[type=range]:focus::-ms-fill-upper {
   max-width: 1356px;
 }
 
-.my-deputat__title {
-  font-size: 30px;
-  margin-block-end: 0em;
+.deputat__title {
+  display: flex;
+  align-items: center;
+  /* выравнивание по вертикали */
+  justify-content: space-between;
+  /* имя слева, ссылка справа */
+  width: 100%;
 }
 
 .my-deputat__body,
@@ -3052,6 +3183,7 @@ input[type=range]:focus::-ms-fill-upper {
   box-sizing: content-box !important;
   border: 1px solid gainsboro;
   border-radius: 12px;
+  position: relative;
 }
 
 .my-deputat__item:last-child {
@@ -3063,15 +3195,44 @@ input[type=range]:focus::-ms-fill-upper {
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
-.my-deputat__item a {
+.my-deputat__item:hover .vote-btn {
+  opacity: 1;
+  pointer-events: auto;
+  color: #fff;
+}
+
+.my-deputat__item:hover .vote-btn-update {
+  opacity: 1;
+  pointer-events: auto;
+  color: #fff;
+}
+
+.vote-btn:hover,
+.vote-btn-candidate:hover,
+.save-btn-candidate:hover,
+.vote-btn-update:hover,
+.my-deputat__item:hover .vote-btn:hover,
+.my-deputat__item:hover .vote-btn-update:hover {
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #0069d9;
+}
+
+.my-deputat__item a:not(.vote-btn) {
   text-decoration: none;
   color: inherit;
   text-align: center;
   margin-bottom: 10px;
 }
 
+.my-deputat__image-wrap {
+  display: flex;
+  justify-content: center;
+}
+
 .my-deputat__image {
-  height: auto;
+  height: 240px;
+  width: 160px;
   margin-bottom: 20px;
 }
 
@@ -3082,7 +3243,7 @@ input[type=range]:focus::-ms-fill-upper {
   text-align: center;
 }
 
-.my-deputat__name:hover {
+.my-deputat__item:hover .my-deputat__name:hover {
   text-decoration: underline;
   color: red;
 }
@@ -3095,7 +3256,7 @@ input[type=range]:focus::-ms-fill-upper {
   margin-bottom: 5px;
 }
 
-.my-deputat__post:hover {
+.my-deputat__item:hover .my-deputat__post:hover {
   text-decoration: underline;
   color: red;
 }
@@ -3114,7 +3275,7 @@ input[type=range]:focus::-ms-fill-upper {
   transition: all 0.3s;
 }
 
-.my-deputat__email:hover {
+.my-deputat__item:hover .my-deputat__email:hover {
   text-decoration: underline;
   color: red;
 }
@@ -3247,6 +3408,7 @@ input[type=range]:focus::-ms-fill-upper {
   padding: 20px 35px;
   -webkit-box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
+  margin-left: 0;
 }
 
 .deputat__contacts-title {
@@ -3279,7 +3441,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .deputat__contacts-district::before {
-  content: url("/local/templates/ugd/css/../img/pages/deputats/geo_blue.png");
+  content: url("https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/geo_blue.png");
   margin-right: 15px;
 }
 
@@ -3293,17 +3455,17 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .deputat__contacts-twitter::before {
-  content: url("/local/templates/ugd/css/../img/pages/deputats/twit_blue.png");
+  content: url("https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/twit_blue.png");
   margin-right: 10px;
 }
 
 .deputat__contacts-email::before {
-  content: url("/local/templates/ugd/css/../img/pages/deputats/mail_blue.png");
+  content: url("https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/mail_blue.png");
   margin-right: 15px;
 }
 
 .deputat__contacts-phone::before {
-  content: url("/local/templates/ugd/css/../img/pages/deputats/phone_blue.png");
+  content: url("https://ugd.ru/local/templates/ugd/css/../img/pages/deputats/phone_blue.png");
   margin-right: 15px;
 }
 
@@ -3342,6 +3504,7 @@ input[type=range]:focus::-ms-fill-upper {
   width: 50%;
   height: 360px;
   padding-right: 5px;
+  margin-left: 0;
   position: relative;
   overflow: hidden;
   display: -webkit-box;
@@ -3732,7 +3895,7 @@ input[type=range]:focus::-ms-fill-upper {
 .deputat-page .my-deputat__link::after,
 .reception-page .my-deputat__link::after,
 .committees-page .my-deputat__link::after {
-  content: url("/local/templates/ugd/css/../img/deputat/line.png");
+  content: url("https://ugd.ru/local/templates/ugd/css/../img/deputat/line.png");
   margin-left: 25px;
   position: relative;
   top: 5px;
@@ -3741,7 +3904,7 @@ input[type=range]:focus::-ms-fill-upper {
 .deputat-page .my-deputat__list {
   -webkit-box-pack: justify;
   -ms-flex-pack: justify;
-  justify-content: space-between;
+  justify-content: flex-start;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
 }
@@ -4251,7 +4414,7 @@ input[type=range]:focus::-ms-fill-upper {
   border-radius: 18px;
   margin: 0px 15px;
   padding-left: 15px;
-  background-image: url("/local/templates/ugd/css/../img/blocks/search-icon.png");
+  background-image: url("https://ugd.ru/local/templates/ugd/css/../img/blocks/search-icon.png");
   background-repeat: no-repeat;
   background-position: 95% center;
   outline: 0;
@@ -4470,7 +4633,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .reception__phone::before {
-  content: url("/local/templates/ugd/css/../img/pages/reception/phone_blue.png");
+  content: url("https://ugd.ru/local/templates/ugd/css/../img/pages/reception/phone_blue.png");
   margin-right: 10px;
 }
 
@@ -5202,7 +5365,7 @@ div.modern-page-navigation {
 }
 
 .left-link::after {
-  content: url(/local/templates/ugd/css/../img/blocks/arrow-blue.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/blocks/arrow-blue.png);
   margin-left: 10px;
 }
 
@@ -5242,12 +5405,12 @@ div.modern-page-navigation {
 }
 
 .head-block__slider .swiper-slide::before {
-  content: url(/local/templates/ugd/css/../img/blocks/head-docs.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/blocks/head-docs.png);
   margin-right: 20px;
 }
 
 .swiper-slide--first:nth-child(1)::before {
-  content: url(/local/templates/ugd/css/../img/blocks/god-zashchitnika.png);
+  content: url(https://ugd.ru/local/templates/ugd/css/../img/blocks/god-zashchitnika.png);
   margin-right: 15px;
 }
 
@@ -5705,10 +5868,6 @@ div.modern-page-navigation {
 
   .my-deputat__item {
     padding: 10px;
-  }
-
-  .deputat-page .my-deputat__image {
-    width: 195px;
   }
 
   .my-deputat__image {
@@ -7286,6 +7445,15 @@ div.modern-page-navigation {
     padding: 5px 10px;
   }
 
+  .candidate-card .vote-btn,
+  .candidate-card .vote-btn-update,
+  .my-deputat__item .vote-btn,
+  .my-deputat__item .vote-btn-update {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    color: #fff !important;
+  }
+
   .head-block__contacts {
     margin-left: 0px;
     margin-right: 0px;
@@ -7458,7 +7626,8 @@ div.modern-page-navigation {
   }
 
   .all-news-list {
-    font-size: 210px;
+    margin: 35px 0px;
+    justify-content: center;
   }
 
   .footer__body {
@@ -7851,9 +8020,9 @@ div.modern-page-navigation {
   }
 
   .news-cats {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }
 
@@ -9655,7 +9824,7 @@ button.swiper-pagination-bullet {
 .searche-title {}
 
 .search-title-button {
-  background-image: url(/local/templates/ugd/components/bitrix/search.title/bootstrap/images/icon-search.svg);
+  background-image: url(https://ugd.ru/local/templates/ugd/components/bitrix/search.title/bootstrap/images/icon-search.svg);
   background-repeat: no-repeat;
   background-position: center;
   min-width: 45px;
@@ -9805,7 +9974,7 @@ table.title-search-result th.title-search-separator {
 
 div.title-search-fader {
   display: none;
-  background-image: url('/local/templates/ugd/components/bitrix/search.title/search-street/images/fader.png');
+  background-image: url('https://ugd.ru/local/templates/ugd/components/bitrix/search.title/search-street/images/fader.png');
   background-position: right top;
   background-repeat: repeat-y;
   position: absolute;

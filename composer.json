@@ -19,7 +19,8 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "phpoffice/phpspreadsheet": "^5.3"
+        "phpoffice/phpspreadsheet": "^5.3",
+        "mpdf/mpdf": "^8.2"
     }
     
 }

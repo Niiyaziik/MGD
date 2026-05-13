@@ -1,9 +1,9 @@
 // photoDialog.js
 // Кадрирование с фиксированной рамкой 1 : 1.5 (ширина : высота = 2 : 3)
 // - Рамка по центру модалки
-// - Изначально "как есть" (scale = 1, dx = 0, dy = 0)
+// - Изначально фото полностью помещается в рамку (fit)
 // - Перетаскивание двигает фото
-// - + / - кнопки рисуются ПРЯМО на фото (внутри canvas справа)
+// - Масштаб регулируется колесиком мыши или pinch-zoom на телефоне
 // - Apply сохраняет ТОЛЬКО область рамки (2:3) в полном качестве
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -42,7 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", () => {
             const file = input.files?.[0];
             if (!file) return;
-            if (!file.type.startsWith("image/")) return alert("Выберите изображение.");
+            if (!file.type.startsWith("image/")) {
+                showMessage("Выберите изображение.", "Ошибка");
+                return;
+            }
             const url = URL.createObjectURL(file);
             preview.src = url;
             upload.classList.add("has-image");
@@ -59,9 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const FRAME_RATIO_H = 3;
     const FRAME_PADDING = 18;
 
-    // UI кнопки +/- внутри canvas
-    const btnUI = { size: 40, pad: 12, gap: 10, radius: 12 };
-    const ZOOM_STEP = 0.12;
+    const ZOOM_STEP = 0.1;
+    const WHEEL_ZOOM_SENSITIVITY = 0.001;
 
     const state = {
         img: null,
@@ -84,6 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
         isDragging: false,
         lastX: 0,
         lastY: 0,
+
+        // для pinch-zoom
+        initialDistance: 0,
+        initialScale: 1,
+        isPinching: false,
 
         objectUrl: null,
     };
@@ -111,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Выберите изображение.");
+            showMessage("Выберите изображение.", "Ошибка");
             input.value = "";
             return;
         }
@@ -125,9 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 setupCanvasForImage(img);
                 state.frame = computeFrame(canvas);
 
-                initAsIs();
-                // ВАЖНО: чтобы рамка была заполнена (без пустот) — поднимем minScale и при необходимости scale
-                ensureCoverFrame();
+                // Изначально фото полностью помещается в рамку (fit)
+                initFitToFrame();
 
                 openModal();
                 draw();
@@ -180,16 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    function initAsIs() {
-        state.scale = 0.1; // как есть
-        state.dx = 0;
-        state.dy = 0;
-        state.minScale = 0.1;
-        state.maxScale = 6;
-    }
-
-    // чтобы рамка была заполнена, задаём минимальный масштаб покрытия рамки
-    function ensureCoverFrame() {
+    // Изначально фото полностью помещается в рамку (fit)
+    function initFitToFrame() {
         const iw = state.img.naturalWidth || state.img.width;
         const ih = state.img.naturalHeight || state.img.height;
 
@@ -199,17 +197,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const imgW1 = iw * state.baseScale;
         const imgH1 = ih * state.baseScale;
 
-        // нужен такой scale, чтобы картинка покрывала рамку
+        // нужен такой scale, чтобы картинка полностью помещалась в рамку (fit)
         const needW = fw / imgW1;
         const needH = fh / imgH1;
 
-        const minCover = Math.max(needW, needH);
+        // выбираем меньший масштаб, чтобы фото полностью поместилось
+        const fitScale = Math.min(needW, needH);
 
-        state.minScale = Math.max(0.1, minCover);
-        state.maxScale = Math.max(state.minScale * 3, 6);
+        // Минимальный масштаб = fitScale (нельзя отдалить дальше, чем само фото)
+        state.minScale = fitScale;
+        state.maxScale = Math.max(fitScale * 5, 6); // можно увеличить в 5 раз
 
-        // "как есть", если хватает, иначе увеличим до minScale
-        state.scale = Math.max(1, state.minScale);
+        // устанавливаем начальный масштаб так, чтобы фото поместилось
+        state.scale = fitScale;
+        state.dx = 0;
+        state.dy = 0;
 
         clampOffsetToFrame();
     }
@@ -225,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
         state.isDragging = false;
     }
 
-    // ограничиваем dx/dy, чтобы рамка всегда была покрыта изображением (без пустот)
+    // ограничиваем dx/dy, чтобы изображение не выходило за рамку, но можно двигать внутри рамки
     function clampOffsetToFrame() {
         const { x: fx, y: fy, w: fw, h: fh } = state.frame;
 
@@ -236,18 +238,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const imgW = iw * scaleUI;
         const imgH = ih * scaleUI;
 
+        // где был бы левый/верхний край изображения при dx=0,dy=0 (центрирование)
         const baseX = (canvas.width - imgW) / 2;
         const baseY = (canvas.height - imgH) / 2;
 
-        const minDx = (fx + fw) - (baseX + imgW);
-        const maxDx = fx - baseX;
+        // dx ограничиваем так, чтобы рамка была внутри изображения:
+        // imgLeft <= frameLeft  и  imgRight >= frameRight
+        if (imgW > fw) {
+            const minDx = (fx + fw) - (baseX + imgW); // самый "влево" (чтобы правый край изображения дошёл до правого края рамки)
+            const maxDx = fx - baseX;                 // самый "вправо" (чтобы левый край изображения дошёл до левого края рамки)
+            state.dx = Math.max(minDx, Math.min(maxDx, state.dx));
+        } else {
+            state.dx = 0;
+        }
 
-        const minDy = (fy + fh) - (baseY + imgH);
-        const maxDy = fy - baseY;
-
-        state.dx = Math.max(minDx, Math.min(maxDx, state.dx));
-        state.dy = Math.max(minDy, Math.min(maxDy, state.dy));
+        if (imgH > fh) {
+            const minDy = (fy + fh) - (baseY + imgH);
+            const maxDy = fy - baseY;
+            state.dy = Math.max(minDy, Math.min(maxDy, state.dy));
+        } else {
+            state.dy = 0;
+        }
     }
+
 
     function draw() {
         if (!state.img) return;
@@ -285,81 +298,11 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.strokeStyle = "rgba(255,255,255,0.95)";
         ctx.lineWidth = 2;
         ctx.strokeRect(fx + 1, fy + 1, fw - 2, fh - 2);
-
-        // кнопки +/- на фото
-        drawZoomButtons();
     }
 
-    // ====== кнопки +/- внутри canvas ======
-    function getZoomButtonRects() {
-        const cw = canvas.width;
-        const ch = canvas.height;
-
-        const size = btnUI.size;
-        const pad = btnUI.pad;
-        const gap = btnUI.gap;
-
-        const x = cw - pad - size;
-        const yPlus = Math.round(ch / 2 - size - gap / 2);
-        const yMinus = Math.round(ch / 2 + gap / 2);
-
-        return {
-            plus: { x, y: yPlus, w: size, h: size },
-            minus: { x, y: yMinus, w: size, h: size },
-        };
-    }
-
-    function drawRoundedRect(x, y, w, h, r) {
-        const rr = Math.min(r, w / 2, h / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + rr, y);
-        ctx.arcTo(x + w, y, x + w, y + h, rr);
-        ctx.arcTo(x + w, y + h, x, y + h, rr);
-        ctx.arcTo(x, y + h, x, y, rr);
-        ctx.arcTo(x, y, x + w, y, rr);
-        ctx.closePath();
-    }
-
-    function drawZoomButtons() {
-        const { plus, minus } = getZoomButtonRects();
-        const r = btnUI.radius;
-
-        ctx.save();
-        ctx.globalAlpha = 0.95;
-
-        // plus
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.strokeStyle = "rgba(0,0,0,0.12)";
-        ctx.lineWidth = 1;
-        drawRoundedRect(plus.x, plus.y, plus.w, plus.h, r);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = "#111";
-        ctx.font = "700 22px system-ui, -apple-system, Segoe UI, Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("+", plus.x + plus.w / 2, plus.y + plus.h / 2 + 1);
-
-        // minus
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.strokeStyle = "rgba(0,0,0,0.12)";
-        ctx.lineWidth = 1;
-        drawRoundedRect(minus.x, minus.y, minus.w, minus.h, r);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = "#111";
-        ctx.font = "700 26px system-ui, -apple-system, Segoe UI, Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("−", minus.x + minus.w / 2, minus.y + minus.h / 2 + 1);
-
-        ctx.restore();
-    }
-
-    function pointInRect(px, py, r) {
-        return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+    // Вычисляет расстояние между двумя точками
+    function getDistance(x1, y1, x2, y2) {
+        return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
     }
 
     function getCanvasPoint(clientX, clientY) {
@@ -372,32 +315,67 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    function zoom(delta) {
-        state.scale = Math.max(
+    function zoom(delta, centerX = null, centerY = null) {
+        const oldScale = state.scale;
+        const newScale = Math.max(
             state.minScale,
             Math.min(state.maxScale, +(state.scale + delta).toFixed(2))
         );
+
+        // Если указан центр зума, корректируем смещение для масштабирования относительно центра
+        if (centerX !== null && centerY !== null && oldScale !== newScale) {
+            const scaleChange = newScale / oldScale;
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = (centerX - rect.left) * (canvas.width / rect.width);
+            const canvasY = (centerY - rect.top) * (canvas.height / rect.height);
+
+            // Позиция изображения до зума
+            const iw = state.img.naturalWidth || state.img.width;
+            const ih = state.img.naturalHeight || state.img.height;
+            const oldScaleUI = state.baseScale * oldScale;
+            const oldImgW = iw * oldScaleUI;
+            const oldImgH = ih * oldScaleUI;
+            const oldImgX = (canvas.width - oldImgW) / 2 + state.dx;
+            const oldImgY = (canvas.height - oldImgH) / 2 + state.dy;
+
+            // Относительная позиция точки зума в изображении
+            const relX = (canvasX - oldImgX) / oldImgW;
+            const relY = (canvasY - oldImgY) / oldImgH;
+
+            // Новая позиция изображения после зума
+            const newScaleUI = state.baseScale * newScale;
+            const newImgW = iw * newScaleUI;
+            const newImgH = ih * newScaleUI;
+            const newImgX = canvasX - relX * newImgW;
+            const newImgY = canvasY - relY * newImgH;
+
+            // Новое смещение
+            state.dx = newImgX - (canvas.width - newImgW) / 2;
+            state.dy = newImgY - (canvas.height - newImgH) / 2;
+        }
+
+        state.scale = newScale;
         clampOffsetToFrame();
         draw();
     }
 
-    // мышь: клик по +/- или drag
+    // мышь: drag
     canvas.addEventListener("mousedown", (e) => {
-        const p = getCanvasPoint(e.clientX, e.clientY);
-        const { plus, minus } = getZoomButtonRects();
-
-        if (pointInRect(p.x, p.y, plus)) return zoom(+ZOOM_STEP);
-        if (pointInRect(p.x, p.y, minus)) return zoom(-ZOOM_STEP);
-
+        e.preventDefault();
         state.isDragging = true;
+        state.isPinching = false;
         state.lastX = e.clientX;
         state.lastY = e.clientY;
     });
 
-    window.addEventListener("mouseup", () => (state.isDragging = false));
+    window.addEventListener("mouseup", () => {
+        state.isDragging = false;
+        state.isPinching = false;
+    });
 
     window.addEventListener("mousemove", (e) => {
-        if (!state.isDragging) return;
+        if (!state.isDragging || state.isPinching) return;
+        e.preventDefault();
         const dx = e.clientX - state.lastX;
         const dy = e.clientY - state.lastY;
         state.lastX = e.clientX;
@@ -408,43 +386,80 @@ document.addEventListener("DOMContentLoaded", () => {
         draw();
     });
 
-    // touch: tap по +/- или drag
+    // Масштабирование колесиком мыши
+    canvas.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const delta = -e.deltaY * WHEEL_ZOOM_SENSITIVITY * state.scale;
+        zoom(delta, e.clientX, e.clientY);
+    }, { passive: false });
+
+    // touch: drag или pinch-zoom
     canvas.addEventListener(
         "touchstart",
         (e) => {
-            if (!e.touches?.[0]) return;
-            const t = e.touches[0];
-            const p = getCanvasPoint(t.clientX, t.clientY);
-            const { plus, minus } = getZoomButtonRects();
-
-            if (pointInRect(p.x, p.y, plus)) return zoom(+ZOOM_STEP);
-            if (pointInRect(p.x, p.y, minus)) return zoom(-ZOOM_STEP);
-
-            state.isDragging = true;
-            state.lastX = t.clientX;
-            state.lastY = t.clientY;
+            if (e.touches.length === 1) {
+                // Один палец - перетаскивание
+                const t = e.touches[0];
+                state.isDragging = true;
+                state.isPinching = false;
+                state.lastX = t.clientX;
+                state.lastY = t.clientY;
+            } else if (e.touches.length === 2) {
+                // Два пальца - pinch-zoom
+                e.preventDefault();
+                state.isDragging = false;
+                state.isPinching = true;
+                const t1 = e.touches[0];
+                const t2 = e.touches[1];
+                state.initialDistance = getDistance(t1.clientX, t1.clientY, t2.clientX, t2.clientY);
+                state.initialScale = state.scale;
+            }
         },
-        { passive: true }
+        { passive: false }
     );
 
     canvas.addEventListener(
         "touchmove",
         (e) => {
-            if (!state.isDragging || !e.touches?.[0]) return;
-            const t = e.touches[0];
-            const dx = t.clientX - state.lastX;
-            const dy = t.clientY - state.lastY;
-            state.lastX = t.clientX;
-            state.lastY = t.clientY;
-            state.dx += dx;
-            state.dy += dy;
-            clampOffsetToFrame();
-            draw();
+            if (e.touches.length === 1 && state.isDragging && !state.isPinching) {
+                // Один палец - перетаскивание
+                const t = e.touches[0];
+                const dx = t.clientX - state.lastX;
+                const dy = t.clientY - state.lastY;
+                state.lastX = t.clientX;
+                state.lastY = t.clientY;
+                state.dx += dx;
+                state.dy += dy;
+                clampOffsetToFrame();
+                draw();
+            } else if (e.touches.length === 2 && state.isPinching) {
+                // Два пальца - pinch-zoom
+                e.preventDefault();
+                const t1 = e.touches[0];
+                const t2 = e.touches[1];
+                const currentDistance = getDistance(t1.clientX, t1.clientY, t2.clientX, t2.clientY);
+
+                if (state.initialDistance > 0) {
+                    const scaleChange = currentDistance / state.initialDistance;
+                    const newScale = state.initialScale * scaleChange;
+                    const delta = newScale - state.scale;
+
+                    // Центр pinch-zoom
+                    const centerX = (t1.clientX + t2.clientX) / 2;
+                    const centerY = (t1.clientY + t2.clientY) / 2;
+
+                    zoom(delta, centerX, centerY);
+                }
+            }
         },
-        { passive: true }
+        { passive: false }
     );
 
-    window.addEventListener("touchend", () => (state.isDragging = false));
+    window.addEventListener("touchend", () => {
+        state.isDragging = false;
+        state.isPinching = false;
+        state.initialDistance = 0;
+    });
 
     // закрытие модалки
     btnClose?.addEventListener("click", closeModal);
@@ -455,7 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnApply.addEventListener("click", async () => {
         const blob = await exportFrameAsBlob();
         if (!blob) {
-            alert("Не удалось обработать изображение.");
+            showMessage("Не удалось обработать изображение.", "Ошибка");
             return;
         }
 

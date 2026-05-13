@@ -1,0 +1,25 @@
+<div class="modal" id="errors-modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close-modal></div>
+
+    <div class="modal__dialog" role="dialog" aria-modal="true" style="max-width: 600px;">
+        <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">×</button>
+
+        <h2 class="modal__title" id="errors-title" style="margin-bottom: 16px; color: #c00;">
+            Ошибки импорта
+        </h2>
+
+        <div class="modal__content" style="padding: 20px;">
+            <div id="errors-list" style="max-height: 400px; overflow-y: auto; text-align: left; margin-bottom: 20px;">
+                <!-- Список ошибок будет добавлен сюда -->
+            </div>
+
+            <div class="modal__actions" style="justify-content: center;">
+                <button type="button" class="modal__submit" id="errors-ok-btn" style="min-width: 120px;">
+                    ОК
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

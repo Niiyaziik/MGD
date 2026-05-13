@@ -2,18 +2,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const API_URL = "/users/admin?format=json&deleted=1"; // удалённые пользователи
 
     const tbody = document.getElementById("users-tbody");
-    const sortFieldSelect = document.getElementById("sort-field");
-    const sortDirSelect = document.getElementById("sort-dir");
     const dateFromInput = document.getElementById("date-from");
     const dateToInput = document.getElementById("date-to");
-    const authFilter = document.getElementById("auth-method-filter");
-    const districtFilter = document.getElementById("district-filter");
     const surnameSearch = document.getElementById("surname-search");
 
     const foundCountEl = document.getElementById("found-count");
     const totalCountEl = document.getElementById("total-count");
 
     let allUsers = [];
+    let currentSortField = null;
+    let currentSortDir = null;
 
     // Загружаем данные
     try {
@@ -27,52 +25,62 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Заполняем селекты "Метод авторизации" и "Округ" из данных
-    fillFiltersFromData(allUsers);
-
     // Устанавливаем общее количество
     totalCountEl.textContent = allUsers.length.toString();
+
+    // Инициализация обработчиков кликов на заголовки
+    initSortableHeaders();
 
     // Первый рендер
     applyAndRender();
 
     // События фильтров
-    [sortFieldSelect, sortDirSelect].forEach(el => {
-        el.addEventListener("change", applyAndRender);
-    });
-
-    [dateFromInput, dateToInput, authFilter, districtFilter].forEach(el => {
+    [dateFromInput, dateToInput].forEach(el => {
         el.addEventListener("change", applyAndRender);
     });
 
     surnameSearch.addEventListener("input", applyAndRender);
 
-    function fillFiltersFromData(users) {
-        const authSet = new Set();
-        const distSet = new Set();
-
-        users.forEach(u => {
-            if (u.auth_method) authSet.add(u.auth_method);
-            if (u.district) distSet.add(u.district);
-        });
-
-        // методы авторизации
-        authSet.forEach(method => {
-            const opt = document.createElement("option");
-            opt.value = method;
-            opt.textContent = method;
-            authFilter.appendChild(opt);
-        });
-
-        // округа
-        Array.from(distSet)
-            .sort((a, b) => String(a).localeCompare(String(b), "ru"))
-            .forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d;
-                opt.textContent = d;
-                districtFilter.appendChild(opt);
+    function initSortableHeaders() {
+        const headers = document.querySelectorAll(".sortable-header");
+        headers.forEach(header => {
+            header.style.cursor = "pointer";
+            header.addEventListener("click", () => {
+                const field = header.dataset.field;
+                handleHeaderClick(field, header);
             });
+        });
+    }
+
+    function handleHeaderClick(field, headerElement) {
+        // Если уже сортируем по этому полю, меняем направление
+        if (currentSortField === field) {
+            currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+        } else {
+            currentSortField = field;
+            currentSortDir = "asc";
+        }
+
+        // Обновляем визуальные индикаторы
+        updateSortIndicators();
+
+        applyAndRender();
+    }
+
+    function updateSortIndicators() {
+        const headers = document.querySelectorAll(".sortable-header");
+        headers.forEach(header => {
+            const indicator = header.querySelector(".sort-indicator");
+            const field = header.dataset.field;
+
+            if (currentSortField === field) {
+                indicator.textContent = currentSortDir === "asc" ? " ↑" : " ↓";
+                header.classList.add("sorted");
+            } else {
+                indicator.textContent = "";
+                header.classList.remove("sorted");
+            }
+        });
     }
 
     function applyAndRender() {
@@ -99,18 +107,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
-        // Фильтр по методу авторизации
-        const authVal = authFilter.value;
-        if (authVal) {
-            list = list.filter(u => u.auth_method === authVal);
-        }
-
-        // Фильтр по округу
-        const distVal = districtFilter.value;
-        if (distVal) {
-            list = list.filter(u => String(u.district) === String(distVal));
-        }
-
         // Поиск по фамилии
         const q = surnameSearch.value.trim().toLowerCase();
         if (q) {
@@ -118,10 +114,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Сортировка
-        const sortField = sortFieldSelect.value;
-        const sortDir = sortDirSelect.value;
-
-        list.sort((a, b) => compareUsers(a, b, sortField, sortDir));
+        if (currentSortField) {
+            list.sort((a, b) => compareUsers(a, b, currentSortField, currentSortDir));
+        }
 
         // Обновляем счётчик "найдено"
         foundCountEl.textContent = list.length.toString();
@@ -133,6 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function compareUsers(a, b, field, dir) {
         const mul = dir === "asc" ? 1 : -1;
 
+        // ===== ДАТА =====
         if (field === "registration_date") {
             const da = a.registration_date ? new Date(a.registration_date) : null;
             const db = b.registration_date ? new Date(b.registration_date) : null;
@@ -142,8 +138,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             return (da - db) * mul;
         }
 
-        const va = (a[field] ?? "").toString().toLowerCase();
-        const vb = (b[field] ?? "").toString().toLowerCase();
+        const vaRaw = a[field];
+        const vbRaw = b[field];
+
+        // ===== ЧИСЛА =====
+        const na = Number(vaRaw);
+        const nb = Number(vbRaw);
+
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+            return (na - nb) * mul;
+        }
+
+        // ===== СТРОКИ =====
+        const va = (vaRaw ?? "").toString().toLowerCase();
+        const vb = (vbRaw ?? "").toString().toLowerCase();
+
         if (va < vb) return -1 * mul;
         if (va > vb) return 1 * mul;
         return 0;
@@ -193,5 +202,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <td>${escapeHtml(district)}</td>
             </tr>
         `;
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const downloadBtn = document.querySelector(".votes-download-btn");
+    if (downloadBtn) {
+        downloadBtn.addEventListener("click", () => {
+            window.location.href = "/users/admin/export?deleted=1";
+        });
     }
 });

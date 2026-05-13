@@ -156,8 +156,14 @@ class AuthController extends BaseController
             return;
         }
 
-        error_log('[AuthController::sendCode] success, SMS sent');
-        $this->json(['ok' => true]);
+        // Код сохранен в БД (SMS может быть не отправлено, но это не критично)
+        $smsSent = $result['sms_sent'] ?? true;
+        if ($smsSent) {
+            error_log('[AuthController::sendCode] success, SMS sent and code saved in DB');
+        } else {
+            error_log('[AuthController::sendCode] success, code saved in DB but SMS not sent');
+        }
+        $this->json(['ok' => true, 'sms_sent' => $smsSent]);
     }
     /**
      * POST /auth/check-code
@@ -172,25 +178,36 @@ class AuthController extends BaseController
         $this->requireMethod('POST');
         $data = $this->getJsonBody();
 
+        error_log('[AuthController::checkCode] raw body: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
+
         $phone = trim((string)($data['phone'] ?? ''));
         $code  = trim((string)($data['code'] ?? ''));
 
+        error_log('[AuthController::checkCode] phone = "' . $phone . '", code = "' . $code . '"');
+
         if ($code === '') {
+            error_log('[AuthController::checkCode] ERROR: code is empty');
             $this->json(['ok' => false, 'error' => 'Не указан код'], 422);
             return;
         }
 
         if ($phone !== '') {
+            error_log('[AuthController::checkCode] using explicit phone from body');
             $result = $this->sms->checkCodeForPhone($phone, $code);
         } else {
+            error_log('[AuthController::checkCode] using phone from session');
             $result = $this->sms->checkCodeForCurrentVoter($code);
         }
 
+        error_log('[AuthController::checkCode] result: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
+
         if (!$result['ok']) {
+            error_log('[AuthController::checkCode] ERROR: ' . ($result['error'] ?? 'unknown'));
             $this->json($result, 422);
             return;
         }
 
+        error_log('[AuthController::checkCode] success, code verified');
         $this->json(['ok' => true]);
     }
 
@@ -475,6 +492,66 @@ class AuthController extends BaseController
 
         // Всё хорошо — по этому номеру ещё не голосовали
         $this->json(['ok' => true]);
+    }
+
+    public function checkDistrict(): void
+    {
+        $this->requireMethod('POST');
+        
+        // Проверяем, что пользователь авторизован
+        $voter = $_SESSION['voter'] ?? null;
+        if (!$voter) {
+            $this->json([
+                'ok'    => false,
+                'error' => 'Вы не авторизованы',
+            ], 401);
+            return;
+        }
+
+        $data = $this->getJsonBody();
+        $candidateId = (int)($data['candidate_id'] ?? 0);
+
+        if (!$candidateId) {
+            $this->json(['ok' => false, 'error' => 'Не указан кандидат'], 422);
+            return;
+        }
+
+        // Получаем округ кандидата
+        $candidateDistrict = $this->candidates->getCandidateDistrict($candidateId);
+        if (!$candidateDistrict) {
+            $this->json(['ok' => false, 'error' => 'Кандидат не найден'], 422);
+            return;
+        }
+
+        $userDistrictId = (int)($voter['district_id'] ?? 0);
+        $userDistrictNum = (string)($voter['district_num'] ?? '');
+        $candidateDistrictId = (int)$candidateDistrict['id'];
+        $candidateDistrictNum = (string)($candidateDistrict['number'] ?? '');
+
+        // Проверяем совпадение округов
+        $canVote = ($userDistrictId === $candidateDistrictId);
+
+        if (!$canVote) {
+            $this->json([
+                'ok'                     => false,
+                'can_vote'               => false,
+                'user_district_id'       => $userDistrictId,
+                'user_district_num'      => $userDistrictNum,
+                'candidate_district_id'  => $candidateDistrictId,
+                'candidate_district_num' => $candidateDistrictNum,
+                'error'                  => 'Вы не можете проголосовать за этого кандидата, так как он относится к другому округу. Ваш округ: ' . $userDistrictNum,
+            ], 422);
+            return;
+        }
+
+        $this->json([
+            'ok'                     => true,
+            'can_vote'               => true,
+            'user_district_id'       => $userDistrictId,
+            'user_district_num'      => $userDistrictNum,
+            'candidate_district_id'  => $candidateDistrictId,
+            'candidate_district_num' => $candidateDistrictNum,
+        ]);
     }
 
     public function vkOneTap(): void

@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const out = await resp.json().catch(() => ({}));
 
             if (!resp.ok || out.ok === false) {
-                alert(out.error || "Ошибка авторизации через ВКонтакте");
+                showMessage(out.error || "Ошибка авторизации через ВКонтакте", "Ошибка");
                 return;
             }
 
@@ -65,12 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (e) {
             console.error("Ошибка /auth/vk/onetap:", e);
-            alert("Не удалось завершить авторизацию через ВК");
+            showMessage("Не удалось завершить авторизацию через ВК", "Ошибка");
         }
     }
 
     function vkidOnError(error) {
         console.error("VKID error:", error);
-        alert("Ошибка при авторизации через ВК");
+        showMessage("Ошибка при авторизации через ВК", "Ошибка");
     }
 });

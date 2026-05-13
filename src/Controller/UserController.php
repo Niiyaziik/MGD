@@ -4,6 +4,8 @@ namespace App\Controller;
 use App\Repository\Contract\UserRepositoryInterface;
 use DomainException;
 use Throwable;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class UserController extends BaseController
 {
@@ -39,6 +41,114 @@ class UserController extends BaseController
         }
     }
 
+    public function exportExcel(): void
+    {
+        $this->requireMethod('GET');
+
+        $deleted = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
+
+        try {
+            $rows = $this->users->getAdminUsers($deleted);
+        } catch (Throwable $e) {
+            $rows = [];
+        }
+
+        if (!is_array($rows)) {
+            $rows = [];
+        }
+
+        $spreadsheet = new Spreadsheet();
+
+        // Лист 1 — Пользователи
+        $sheet1 = $spreadsheet->getActiveSheet();
+        $sheet1->setTitle('Пользователи');
+
+        $sheet1->fromArray(
+            ['ID', 'Дата регистрации', 'Метод авторизации', 'Фамилия', 'Имя', 'Отчество', 'Телефон', 'ВК', 'Улица', 'Дом', 'Округ'],
+            null,
+            'A1'
+        );
+
+        $rowIndex = 2;
+        $districtStats = [];
+
+        foreach ($rows as $row) {
+            $id = $row['id'] ?? '';
+            $createdAt = $row['registration_date']
+                ?? ($row['created_at'] ?? ($row['created'] ?? ($row['date'] ?? '')));
+            $authMethod = $row['auth_method'] ?? ($row['auth'] ?? '');
+            $surname = $row['surname'] ?? '';
+            $name = $row['name'] ?? '';
+            $patronymic = $row['patronymic'] ?? '';
+            $phone = $row['phone'] ?? '';
+            $vk = $row['link_vk'] ?? ($row['vk'] ?? ($row['vk_link'] ?? ''));
+            $street = $row['street'] ?? '';
+            $house = $row['house'] ?? '';
+            $district = $row['district']
+                ?? ($row['district_num'] ?? ($row['district_id'] ?? ''));
+
+            $sheet1->setCellValue("A{$rowIndex}", $id);
+            $sheet1->setCellValue("B{$rowIndex}", $createdAt);
+            $sheet1->setCellValue("C{$rowIndex}", $authMethod);
+            $sheet1->setCellValue("D{$rowIndex}", $surname);
+            $sheet1->setCellValue("E{$rowIndex}", $name);
+            $sheet1->setCellValue("F{$rowIndex}", $patronymic);
+            $sheet1->setCellValue("G{$rowIndex}", $phone);
+            $sheet1->setCellValue("H{$rowIndex}", $vk);
+            $sheet1->setCellValue("I{$rowIndex}", $street);
+            $sheet1->setCellValue("J{$rowIndex}", $house);
+            $sheet1->setCellValue("K{$rowIndex}", $district);
+
+            if ($district !== '' && $district !== null) {
+                $key = (string)$district;
+                $districtStats[$key] = ($districtStats[$key] ?? 0) + 1;
+            }
+
+            $rowIndex++;
+        }
+
+        foreach (range('A', 'K') as $col) {
+            $sheet1->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Лист 2 — Статистика по округам
+        if (!empty($districtStats)) {
+            $sheet2 = $spreadsheet->createSheet();
+            $sheet2->setTitle('Статистика');
+            $sheet2->fromArray(['Округ', 'Кол-во пользователей'], null, 'A1');
+
+            uksort($districtStats, static function ($a, $b) {
+                $aIsNum = is_numeric($a);
+                $bIsNum = is_numeric($b);
+                if ($aIsNum && $bIsNum) return (int)$a <=> (int)$b;
+                if ($aIsNum) return -1;
+                if ($bIsNum) return 1;
+                return strcmp((string)$a, (string)$b);
+            });
+
+            $i = 2;
+            foreach ($districtStats as $districtKey => $count) {
+                $sheet2->setCellValue("A{$i}", $districtKey);
+                $sheet2->setCellValue("B{$i}", $count);
+                $i++;
+            }
+
+            foreach (range('A', 'B') as $col) {
+                $sheet2->getColumnDimension($col)->setAutoSize(true);
+            }
+        }
+
+        $fileName = ($deleted ? 'Пользователи-удалённые-' : 'Пользователи-') . date('Y-m-d_H-i-s') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
     public function adminIndex(): void
     {
         $this->requireMethod('GET');
@@ -56,22 +166,28 @@ class UserController extends BaseController
             return;
         }
 
-        header_remove('Content-Type');
-        header('Content-Type: text/html; charset=utf-8');
-        include __DIR__ . '/../../public/users-db.php';
+        require __DIR__ . '/../../public/users-db/users-db.php';
     }
 
     public function adminDeleted(): void
     {
         $this->requireMethod('GET');
 
-        try {
-            // 1 — только удалённые (deleted_at IS NOT NULL)
-            $list = $this->users->getAdminUsers(1);
-            $this->json($list);
-        } catch (Throwable $e) {
-            $this->json(['ok' => false, 'error' => 'Ошибка загрузки удалённых пользователей'], 500);
+        $format  = $_GET['format']  ?? null;
+        $deleted = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
+
+        if ($format === 'json') {
+            try {
+                // 1 — только удалённые (deleted_at IS NOT NULL)
+                $list = $this->users->getAdminUsers(1);
+                $this->json($list);
+            } catch (Throwable $e) {
+                $this->json(['ok' => false, 'error' => 'Ошибка загрузки удалённых пользователей'], 500);
+            }
         }
+
+        require __DIR__ . '/../../public/users-db/deleted-users-db.php';
+
     }
 
     /**

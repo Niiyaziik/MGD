@@ -8,6 +8,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const captchaRes = await fetch("/components/reCaptcha.php");
     const phoneRes = await fetch("/components/phone.php");
     const finishRes = await fetch("/components/success.php");
+    const warningRes = await fetch("/components/warning.html");
+    const messageRes = await fetch("/components/message-modal.html");
+    const errorsRes = await fetch("/components/errors-modal.html");
 
     const authHtml = await authRes.text();
     const successHtml = await successRes.text();
@@ -15,6 +18,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const captchaHtml = await captchaRes.text();
     const phoneHtml = await phoneRes.text();
     const finishHtml = await finishRes.text();
+    const warningHtml = await warningRes.text();
+    const messageHtml = await messageRes.text();
+    const errorsHtml = await errorsRes.text();
 
     // добавляем в DOM все модалки
     container.innerHTML =
@@ -23,7 +29,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         adminHtml +
         captchaHtml +
         phoneHtml +
-        finishHtml;
+        finishHtml +
+        warningHtml +
+        messageHtml +
+        errorsHtml;
 
     document.body.appendChild(container);
 

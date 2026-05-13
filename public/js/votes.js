@@ -17,10 +17,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         thead.innerHTML = `
             <tr>
                 <th>Номер округа</th>
-                <th>ФИО избирателя</th>
-                <th>Адрес</th>
-                <th>Телефон</th>
-                <th>Кандидат</th>
+                <th class="sortable-header" data-field="user_name">
+                    <span>ФИО избирателя</span>
+                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                    <span class="sort-indicator"></span>
+                </th>
+                <th class="sortable-header" data-field="address">
+                    <span>Адрес</span>
+                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                    <span class="sort-indicator"></span>
+                </th>
+                <th class="sortable-header" data-field="phone">
+                    <span>Телефон</span>
+                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                    <span class="sort-indicator"></span>
+                </th>
+                <th class="sortable-header" data-field="candidate">
+                    <span>Кандидат</span>
+                    <img src="/assets/icons/filter.svg" class="filter-icon" alt="Фильтр">
+                    <span class="sort-indicator"></span>
+                </th>
                 <th>Действия</th>
             </tr>
         `;
@@ -34,6 +50,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { tbody } = createEmptyTable();
     let data = [];
     let countSpan = null;
+    let currentSortField = null;
+    let currentSortDir = null;
+    let columnFilters = {}; // Фильтры для каждого столбца
     try {
         const res = await fetch(API_URL, {
             headers: { "Accept": "application/json" }
@@ -59,17 +78,137 @@ document.addEventListener("DOMContentLoaded", async () => {
         const downloadBtn = document.createElement("button");
         downloadBtn.type = "button";
         downloadBtn.className = "votes-download-btn";
-        downloadBtn.textContent = "Скачать Excel";
+        downloadBtn.textContent = "Excel";
+        downloadBtn.style.marginRight = "10px";
+        downloadBtn.style.backgroundColor = "#28a745"; // Зелёный
+        downloadBtn.style.color = "#fff";
         downloadBtn.addEventListener("click", () => {
             window.location.href = "/votes/admin/export";
         });
+
+        // Кнопка "Образец" - скачивает шаблон Excel
+        const templateBtn = document.createElement("button");
+        templateBtn.type = "button";
+        templateBtn.className = "votes-download-btn";
+        templateBtn.textContent = "Образец";
+        templateBtn.style.marginRight = "10px";
+        templateBtn.addEventListener("click", () => {
+            window.location.href = "/votes/admin/export-template";
+        });
+
+        // Кнопка "Внести данные" - загружает и импортирует Excel
+        const importBtn = document.createElement("button");
+        importBtn.type = "button";
+        importBtn.className = "votes-download-btn";
+        importBtn.textContent = "Внести данные";
+        importBtn.style.marginRight = "10px";
+        importBtn.addEventListener("click", () => {
+            const fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.accept = ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            fileInput.addEventListener("change", async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.name.toLowerCase().endsWith('.xlsx')) {
+                    showMessage("Пожалуйста, выберите файл в формате .xlsx", "Ошибка");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    importBtn.disabled = true;
+                    importBtn.textContent = "Загрузка...";
+
+                    const res = await fetch("/votes/admin/import", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const result = await res.json().catch(() => ({}));
+
+                    if (!res.ok || result.ok === false) {
+                        // Если есть массив ошибок, показываем их через модалку ошибок
+                        if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+                            showErrors(result.errors, "Ошибки импорта");
+                        } else {
+                            showMessage("Ошибка импорта: " + (result.error || "Неизвестная ошибка"), "Ошибка");
+                        }
+                        importBtn.disabled = false;
+                        importBtn.textContent = "Внести данные";
+                        return;
+                    }
+
+                    // Если есть ошибки, но импорт частично успешен, показываем и успех, и ошибки
+                    if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+                        showMessage(
+                            `Успешно импортировано ${result.imported || 0} записей. Есть ошибки при импорте некоторых строк.`,
+                            "Импорт завершен с ошибками",
+                            () => {
+                                // После закрытия сообщения об успехе показываем ошибки
+                                setTimeout(() => {
+                                    showErrors(result.errors, "Ошибки импорта");
+                                }, 300);
+                            }
+                        );
+                    } else {
+                        showMessage(`Успешно импортировано ${result.imported || 0} записей`, "Успех");
+                    }
+
+                    // Перезагружаем данные только если нет ошибок или если пользователь закрыл модалку ошибок
+                    if (!result.errors || result.errors.length === 0) {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
+                } catch (err) {
+                    console.error("Ошибка импорта:", err);
+                    showMessage("Не удалось загрузить файл. Попробуйте позже.", "Ошибка");
+                    importBtn.disabled = false;
+                    importBtn.textContent = "Внести данные";
+                }
+            });
+            fileInput.click();
+        });
+
+        // Кнопка "Скачать PDF"
+        const pdfBtn = document.createElement("button");
+        pdfBtn.type = "button";
+        pdfBtn.className = "votes-download-btn";
+        pdfBtn.textContent = "PDF";
+        pdfBtn.style.marginRight = "10px";
+        pdfBtn.style.backgroundColor = "#dc3545"; // Красный
+        pdfBtn.style.color = "#fff";
+        pdfBtn.addEventListener("click", () => {
+            window.location.href = "/votes/admin/export-pdf";
+        });
+
+        // Кнопка "Скачать CSV"
+        const csvBtn = document.createElement("button");
+        csvBtn.type = "button";
+        csvBtn.className = "votes-download-btn";
+        csvBtn.textContent = "CSV";
+        csvBtn.style.backgroundColor = "#28a745"; // Зелёный
+        csvBtn.style.color = "#fff";
+        csvBtn.addEventListener("click", () => {
+            window.location.href = "/votes/admin/export-csv";
+        });
+
         const actions = document.createElement("div");
         actions.className = "voters-actions";
-        actions.appendChild(deletedBtn);
+        actions.appendChild(templateBtn);
+        actions.appendChild(importBtn);
         actions.appendChild(downloadBtn);
+        actions.appendChild(pdfBtn);
+        actions.appendChild(csvBtn);
         votersInfo.appendChild(countSpan);
         votersInfo.appendChild(actions);
         container.prepend(votersInfo);
+
+        // Инициализация обработчиков кликов на заголовки
+        initSortableHeaders();
     } catch (e) {
         console.error("Ошибка при запросе голосов:", e);
         const tr = document.createElement("tr");
@@ -89,6 +228,98 @@ document.addEventListener("DOMContentLoaded", async () => {
         tbody.appendChild(tr);
         return;
     }
+    function initSortableHeaders() {
+        const headers = document.querySelectorAll(".votes-table .sortable-header");
+        headers.forEach(header => {
+            header.style.cursor = "pointer";
+
+            // Клик на заголовок - сортировка
+            header.addEventListener("click", (e) => {
+                // Если клик был по input фильтра, не сортируем
+                if (e.target.tagName === "INPUT") return;
+                const field = header.dataset.field;
+                handleHeaderClick(field, header);
+            });
+
+            // Клик на иконку фильтра - показываем/скрываем input
+            const filterIcon = header.querySelector(".filter-icon");
+            if (filterIcon) {
+                filterIcon.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    toggleFilterInput(header);
+                });
+            }
+        });
+    }
+
+    function toggleFilterInput(header) {
+        const field = header.dataset.field;
+        let filterInput = header.querySelector(".filter-input");
+
+        if (filterInput) {
+            // Если input уже есть, удаляем его
+            filterInput.remove();
+            delete columnFilters[field];
+            renderTable();
+        } else {
+            // Создаем input для фильтрации
+            filterInput = document.createElement("input");
+            filterInput.type = "text";
+            filterInput.className = "filter-input";
+            filterInput.placeholder = "Фильтр...";
+            filterInput.value = columnFilters[field] || "";
+            filterInput.style.cssText = "width: 100px; padding: 2px 4px; margin-left: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px;";
+
+            filterInput.addEventListener("input", (e) => {
+                const value = e.target.value.trim();
+                if (value) {
+                    columnFilters[field] = value;
+                } else {
+                    delete columnFilters[field];
+                }
+                renderTable();
+            });
+
+            filterInput.addEventListener("click", (e) => {
+                e.stopPropagation();
+            });
+
+            header.appendChild(filterInput);
+            filterInput.focus();
+        }
+    }
+
+    function handleHeaderClick(field, headerElement) {
+        // Если уже сортируем по этому полю, меняем направление
+        if (currentSortField === field) {
+            currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+        } else {
+            currentSortField = field;
+            currentSortDir = "asc";
+        }
+
+        // Обновляем визуальные индикаторы
+        updateSortIndicators();
+
+        renderTable();
+    }
+
+    function updateSortIndicators() {
+        const headers = document.querySelectorAll(".votes-table .sortable-header");
+        headers.forEach(header => {
+            const indicator = header.querySelector(".sort-indicator");
+            const field = header.dataset.field;
+
+            if (currentSortField === field) {
+                indicator.textContent = currentSortDir === "asc" ? " ↑" : " ↓";
+                header.classList.add("sorted");
+            } else {
+                indicator.textContent = "";
+                header.classList.remove("sorted");
+            }
+        });
+    }
+
     function renderTable() {
         tbody.innerHTML = "";
         if (countSpan) {
@@ -103,9 +334,37 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             grouped.get(district).push(row);
         });
+
+        // Применяем фильтры и сортировку внутри каждого округа
         grouped.forEach((rows, districtNumber) => {
-            const rowSpan = rows.length;
-            rows.forEach((row, index) => {
+            // Фильтрация внутри округа
+            let filteredRows = rows.filter(row => {
+                // Применяем фильтры для каждого столбца
+                for (const [field, filterValue] of Object.entries(columnFilters)) {
+                    if (filterValue && filterValue.trim() !== "") {
+                        const rowValue = String(row[field] || "").toLowerCase();
+                        if (!rowValue.includes(filterValue.toLowerCase())) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            });
+
+            // Сортировка внутри округа
+            if (currentSortField && filteredRows.length > 0) {
+                filteredRows.sort((a, b) => {
+                    const va = String(a[currentSortField] || "").toLowerCase();
+                    const vb = String(b[currentSortField] || "").toLowerCase();
+                    const mul = currentSortDir === "asc" ? 1 : -1;
+                    if (va < vb) return -1 * mul;
+                    if (va > vb) return 1 * mul;
+                    return 0;
+                });
+            }
+
+            const rowSpan = filteredRows.length;
+            filteredRows.forEach((row, index) => {
                 const tr = document.createElement("tr");
                 tr.dataset.voteId = row.id != null ? String(row.id) : "";
                 if (index === 0) {
@@ -184,7 +443,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function saveRow(tr) {
         const voteId = tr.dataset.voteId || "";
         if (!voteId) {
-            alert("Не удалось определить ID голоса");
+            showMessage("Не удалось определить ID голоса", "Ошибка");
             return;
         }
         const nameInput = tr.querySelector(".edit-voter-name");
@@ -216,7 +475,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 out = {};
             }
             if (!res.ok || out.ok === false) {
-                alert("Ошибка сохранения: " + (out.error || "Неизвестная ошибка"));
+                showMessage("Ошибка сохранения: " + (out.error || "Неизвестная ошибка"), "Ошибка");
                 return;
             }
             const idx = data.findIndex(v => String(v.id) === String(voteId));
@@ -231,13 +490,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderTable();
         } catch (err) {
             console.error("Ошибка /votes/admin/update:", err);
-            alert("Не удалось сохранить изменения. Попробуйте позже.");
+            showMessage("Не удалось сохранить изменения. Попробуйте позже.", "Ошибка");
         }
     }
     async function deleteRow(tr) {
         const voteId = tr.dataset.voteId || "";
         if (!voteId) {
-            alert("Не удалось определить ID голоса");
+            showMessage("Не удалось определить ID голоса", "Ошибка");
             return;
         }
         if (!confirm("Удалить этот голос?")) {
@@ -260,14 +519,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 out = {};
             }
             if (!res.ok || out.ok === false) {
-                alert("Ошибка удаления: " + (out.error || "Неизвестная ошибка"));
+                showMessage("Ошибка удаления: " + (out.error || "Неизвестная ошибка"), "Ошибка");
                 return;
             }
             data = data.filter(v => String(v.id) !== String(voteId));
             renderTable();
         } catch (err) {
             console.error("Ошибка /votes/admin/delete:", err);
-            alert("Не удалось удалить голос. Попробуйте позже.");
+            showMessage("Не удалось удалить голос. Попробуйте позже.", "Ошибка");
         }
     }
     document.addEventListener("click", async (e) => {

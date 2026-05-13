@@ -182,14 +182,20 @@ $container->set(
 
 $container->set(
     DistrictController::class,
-    fn($c) => new DistrictController($c->get(DistrictRepositoryInterface::class))
+    fn($c) => new DistrictController(
+        $c->get(DistrictRepositoryInterface::class),
+        $c
+    )
 );
 
 $container->set(
     VoteController::class,
     fn($c) => new VoteController(
         $c->get(VoteRepositoryInterface::class),
-        $c->get(CandidateRepositoryInterface::class))
+        $c->get(CandidateRepositoryInterface::class),
+        $c->get(UserRepositoryInterface::class),
+        $c->get(DistrictRepositoryInterface::class)
+    )
 );
 
 $container->set(
@@ -241,6 +247,8 @@ $container->set(SmsService::class, fn($c)=> new SmsService(
 $container->set(AdminService::class, fn($c) => new AdminService(
     $c->get(AdminRepositoryInterface::class),
 ));
+
+$container->set(\App\Service\FiasService::class, fn($c) => new \App\Service\FiasService());
 
 $container->set(AdminMiddleware::class,
     fn($c) => new AdminMiddleware(

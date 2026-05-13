@@ -1,0 +1,27 @@
+<div class="modal" id="warning-modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close-modal></div>
+
+    <div class="modal__dialog" role="dialog" aria-modal="true">
+        <button class="modal__close" type="button" data-close-modal aria-label="Закрыть">×</button>
+
+        <h2 class="modal__title" style="color: #c00; margin-bottom: 16px; text-align:center;">
+            Ошибка округа
+        </h2>
+
+        <div class="modal__content" style="text-align: center; padding: 20px;">
+            <p id="warning-message" style="font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                Вы не можете проголосовать за данного кандидата, поскольку он относится к другому округу.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+                <strong>Ваш округ голосования: <span id="warning-user-district"></span></strong>
+            </div>
+
+            <div class="modal__actions" style="justify-content: center;">
+                <button type="button" class="modal__submit" id="warning-ok-btn" style="min-width: 120px;">
+                    Продолжить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

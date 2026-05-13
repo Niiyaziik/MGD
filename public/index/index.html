@@ -1,9 +1,14 @@
 <!doctype html>
 <html lang="ru">
-<link rel="stylesheet" href="assets/main.css" />
-<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-<title>
-    Новости Ульяновской Городской Думы </title>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/main.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <title>
+        Новости Ульяновской Городской Думы </title>
+</head>
 
 <body>
     <div>
@@ -16,8 +21,22 @@
                     <img class="logo-block__image" src="https://ugd.ru/local/templates/ugd/img/logo.png"
                         alt="25 лет служим городу" title="25 лет служим городу">
                 </a>
+                <div class="left-side__search">
 
+                    <div id="title-search" class="bx-searchtitle  bx-blue">
+                        <div class="input-group">
+                            <input id="title-search-input" type="text" name="q" value="" autocomplete="off"
+                                class="form-control" placeholder="Поиск по сайту" />
+                        </div>
+                    </div>
 
+                    <div class="head-block__contacts">
+                        <p class="head-block__visual" id="specialButton" style="cursor:pointer;">
+                            <img src="https://ugd.ru/local/templates/ugd/img/blocks/eye.png"
+                                alt="ВЕРСИЯ ДЛЯ СЛАБОВИДЯЩИХ" title="ВЕРСИЯ ДЛЯ СЛАБОВИДЯЩИХ" />
+                        </p>
+                    </div>
+                </div>
                 <div class="left-side__soc">
                     <a class="head-block__vk" href="https://vk.com/ulduma" target="_blank"></a>
                     <a class="head-block__telegram" href="https://t.me/ugd73" target="_blank" rel="noopener"></a>
@@ -29,7 +48,7 @@
                 </div>
                 <nav class="left-side__navigation">
                     <ul>
-                        <li><a href="/">Главная</a></li>
+                        <li><a href="/" rel="noopener" class="selected">Главная</a></li>
 
                         <li><a href="/candidates">Кандидаты</a></li>
 
@@ -470,27 +489,6 @@
                                     <time datetime="2021-07-13">25.08.2025</time>
                                 </p>
                             </li>
-                            <!--<li class="news-list__item"> <a href="http://ugd.ru/upload/itogi-24-01-2022.doc" class="news-list__link" style="margin-bottom: 5px;">Итоговый документ публичных слушаний</a>
-            <p style="margin-bottom: 20px;">
-                <time datetime="2022-01-24">24.01.2022</time>
-            </p>
-     </li>
-
-            <li class="news-list__item"> <a href="http://ugd.ru/upload/resheniya/2021/reshenie-232.doc" class="news-list__link" style="margin-bottom: 5px;">Объявление о публичных слушаниях 14.01.2022</a>
-            <p style="margin-bottom: 20px;">
-                <time datetime="2022-01-14">14.01.2022</time>
-            </p>
-     </li>
-            <li class="news-list__item"> <a href="http://ugd.ru/upload/resheniya/2021/reshenie-232.doc" class="news-list__link" style="margin-bottom: 5px;">Объявление о публичных слушаниях 26.11.2021</a>
-            <p style="margin-bottom: 20px;">
-                <time datetime="2021-11-20">26.11.2021</time>
-            </p>
-     </li>
-            <li class="news-list__item"> <a href="http://ugd.ru/upload/resheniya/2021/reshenie-232.doc" class="news-list__link" style="margin-bottom: 5px;">Информационное сообщение</a>
-            <p style="margin-bottom: 20px;">
-                <time datetime="2021-08-17">17.08.2021</time>
-            </p>
-     </li>-->
                         </ul>
                     </div>
                     <div id="invitation" class="content-list__content"
@@ -551,12 +549,12 @@
                         </ul>
                     </div>
                     <div id="candidates" class="content-list__content">
-                        <h2 class="content-list__title">Кандидаты Молодежной городской думы</h2>
-                        <div class="all-news-list">
+                        <h2 class="content-list__candidate-title">Кандидаты Молодежной городской думы</h2>
+                        <div class="all-candidates-list">
                             <a href="/candidates">Все кандидаты</a>
                         </div>
                     </div>
-                    <ul class="candidate-list">
+                    <ul class="my-deputat__list">
                         <!-- <li class="candidate-card">
                     <a  href="/candidate/page/{id}">
                         <div class="candidate-card__figure">
@@ -580,8 +578,9 @@
 
             <div class="footer__body">
                 <ul class="footer__menu">
-                    <li class="footer__menu-item"><span class="title">О думе</span> <img class="footer__arrow" alt=""
-                            title="">
+                    <li class="footer__menu-item"><span class="title">О думе</span> <img
+                            src="https://ugd.ru/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow"
+                            alt="" title="">
                     </li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/about/"
                             onclick="openTab2(event, 'history')">История</a></li>
@@ -601,8 +600,9 @@
                     <!--<li class="footer__menu-item"><a class="footer__menu-link" href="#">Благодарности депутатам</a></li>-->
                 </ul>
                 <ul class="footer__menu">
-                    <li class="footer__menu-item"><span class="title">Деятельность</span> <img class="footer__arrow"
-                            alt="" title="">
+                    <li class="footer__menu-item"><span class="title">Деятельность</span> <img
+                            src="https://ugd.ru/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow"
+                            class="footer__arrow" alt="" title="">
                     </li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/docs/#solutions">Решения</a></li>
                     <li class="footer__menu-item"><a class="footer__menu-link"
@@ -627,8 +627,9 @@
                             документов</a></li>
                 </ul>
                 <ul class="footer__menu">
-                    <li class="footer__menu-item"><span class="title">Приемная</span> <img class="footer__arrow" alt=""
-                            title="">
+                    <li class="footer__menu-item"><span class="title">Приемная</span> <img
+                            src="https://ugd.ru/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow"
+                            class="footer__arrow" alt="" title="">
                     </li>
                     <li class="footer__menu-item"><a class="footer__menu-link" href="/reception/">Работа с обращениями
                             граждан</a></li>
@@ -644,48 +645,42 @@
                             повесток заседаний комитетов</a></li>
                 </ul>
                 <ul class="footer_contact_all">
-                    <p class="footer_copyrigt">© 2025 Ульяновская Городская Дума</p>
+                    <p class="footer_copyrigt">© 2026 Ульяновская Городская Дума</p>
                     <p class="footer_addr">ул. Кузнецова, 7</p>
                     <p class="footer_phone">Телефон: (8422) 41-38-00</p>
                     <p class="footer_mail">e-mail: <a href="mailto:duma@ugd.ru">duma@ugd.ru</a></p>
                     <p class="footer_personal"><a target="_blank" href="/upload/politica-2018.pdf">Политика в отношении
                             обработки персональных данных</a></p>
                 </ul>
-                <!--
-        <ul class="footer__menu">
-            <li class="footer__menu-item"><span class="title">О городе</span> <img src="/local/templates/ugd/img/blocks/bley-arrow.png" class="footer__arrow" alt="" title=""></li>
-        </ul>
-    -->
             </div>
         </footer>
+        <div class="footer-copyright-design">
+            <div class="container">Разработано в <a href="http://agatech.ru/" target="_blank"
+                    title="agatech.ru">AGATECH</a></div>
+        </div>
         <script>
                 (async function () {
-                    const ul = document.querySelector('.candidate-list');
+                    const ul = document.querySelector('.my-deputat__list');
                     if (!ul) return;
-                    const res = await fetch('/candidates?format=json&limit=5');
+                    const res = await fetch('/candidates?format=json&limit=8');
                     const data = await res.json();
 
                     const tpl = (c) => `
-        <li class="candidate-card">
-        <div class="candidate-card__link">
-            <div class="candidate-card__figure">
-                <a href="/candidate.html?id=${Number(c.id)}">
-                    <img
-                        class="candidates-card__photo"
-                        src="${c.photo ? c.photo : '/assets/img/candidates/placeholder.jpeg'}"
-                        alt="${(c.surname || '') + ' ' + (c.name || '') + ' ' + (c.patronymic || '')}">
-                </a>
-                <a class="vote-btn" data-id="${c.id}" href="#">Проголосовать</a>
-            </div>
-            <a class="candidate-card__body" href="/candidate.html?id=${Number(c.id)}">
-            <h3 class="candidate-card__name">
-                ${(c.surname || '') + ' ' + (c.name || '')}<br>${(c.patronymic || '')}
-            </h3>
-            <div class="candidate-card__role">Кандидат Молодёжной Думы</div>
-            <div class="candidate-card__district">Округ ${(c.district || '')}</div>
-            <div class="candidate-card__email">${(c.email || '')}</div>
+        <li class="my-deputat__item">
+            <a href="/candidate.html?id=${Number(c.id)}">
+                <img
+                    class="my-deputat__image"
+                    src="${c.photo ? c.photo : '/assets/img/candidates/placeholder.jpeg'}"
+                    alt="${(c.surname || '') + ' ' + (c.name || '') + ' ' + (c.patronymic || '')}"
+                    width="161" height="242">
             </a>
-        </div>
+            <a class="vote-btn" data-id="${c.id}" href="#">Проголосовать</a>
+            <a href="/candidate.html?id=${Number(c.id)}" class="my-deputat__name">
+                ${(c.surname || '') + ' ' + (c.name || '') + '' + (c.patronymic || '')}
+            </a>
+            <a href="/candidate.html?id=${Number(c.id)}" class="my-deputat__post">Кандидат Молодёжной Думы</a>
+            <a href="/candidate.html?id=${Number(c.id)}" class="my-deputat__district">Округ ${(c.district || '')}</a>
+            <a href="mailto:${c.email}" class="my-deputat__email">${(c.email || '')}</a>
         </li>`;
                     ul.innerHTML = data.map(tpl).join('');
                 })();
@@ -731,6 +726,15 @@
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <script src="https://unpkg.com/@vkid/sdk@3.0.0/dist-sdk/umd/index.js"></script>
         <script src="./js/vk-auth.js"></script>
+        <script src="https://ugd.ru/local/templates/ugd/js/swiper-bundle.min.js"></script>
+        <script src="https://ugd.ru/local/templates/ugd/js/script.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="/local/templates/ugd/js/fancybox.umd.js"></script>
+        <script>
+            Fancybox.bind('[data-fancybox="gallery"]', {
+                infinite: false
+            });
+        </script>
 </body>
 
 </html>

@@ -37,6 +37,58 @@ if ($isAdminRoute) {
 // стартуем сессию
 session_start();
 
+
+// Обработка статических файлов (CSS, JS, изображения и т.д.)
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$parsedUri = parse_url($requestUri, PHP_URL_PATH);
+
+// Если запрашивается статический файл - отдаём его напрямую
+if ($parsedUri && $parsedUri !== '/' && !str_starts_with($parsedUri, '/auth') && !str_starts_with($parsedUri, '/candidates') && !str_starts_with($parsedUri, '/districts') && !str_starts_with($parsedUri, '/votes') && !str_starts_with($parsedUri, '/admin') && !str_starts_with($parsedUri, '/users') && !str_starts_with($parsedUri, '/captcha') && !str_starts_with($parsedUri, '/address')) {
+    $staticFile = __DIR__ . $parsedUri;
+    
+    // Проверяем, что файл существует и находится в допустимой директории
+    if (is_file($staticFile) && str_starts_with(realpath($staticFile), realpath(__DIR__))) {
+        // Определяем MIME-тип по расширению
+        $ext = strtolower(pathinfo($staticFile, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'json' => 'application/json',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'ico' => 'image/x-icon',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+            'eot' => 'application/vnd.ms-fontobject',
+        ];
+        
+        $mimeType = $mimeTypes[$ext] ?? 'application/octet-stream';
+        
+        header('Content-Type: ' . $mimeType);
+        header('Content-Length: ' . filesize($staticFile));
+        
+        // Кеширование для статических файлов
+        $lastModified = filemtime($staticFile);
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
+        header('Cache-Control: public, max-age=31536000');
+        
+        // Если файл не изменился - отдаём 304
+        if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
+            $ifModifiedSince = strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']);
+            if ($ifModifiedSince >= $lastModified) {
+                http_response_code(304);
+                exit;
+            }
+        }
+        
+        readfile($staticFile);
+        exit;
+    }
+}
 require __DIR__ . '/../vendor/autoload.php';
 
 $container = require __DIR__ . '/../bootstrap.php';
@@ -50,7 +102,7 @@ $router = new Router($container);
 // определяем маршруты
 $router->get('/', function () {
     // Возвращаем содержимое index.html
-    readfile(__DIR__ . '/index.html');
+    require __DIR__ . '/index/index.php';
 });
 
 // Округа
@@ -73,6 +125,7 @@ $router->delete('/districts/admin/delete', [\App\Controller\DistrictController::
 $router->get('/districts/admin/deleted', [\App\Controller\DistrictController::class, 'adminDeleted'])->middleware(AdminMiddleware::class);
 $router->get('/districts/admin/check-duplicates', [\App\Controller\DistrictController::class, 'checkDuplicates'])->middleware(AdminMiddleware::class);
 $router->get('/address/suggest', [\App\Controller\DistrictController::class, 'suggest']);
+$router->get('/address/test', [\App\Controller\DistrictController::class, 'testFias']);
 
 // Кандидаты
 $router->get('/candidates', [\App\Controller\CandidateController::class, 'index']);
@@ -88,6 +141,7 @@ $router->get('/candidates/admin/edit', [\App\Controller\CandidateController::cla
 $router->put('/candidates/admin/update', [\App\Controller\CandidateController::class, 'adminUpdate'])->middleware(AdminMiddleware::class);
 $router->delete('/candidates/admin/delete', [\App\Controller\CandidateController::class, 'adminDelete'])->middleware(AdminMiddleware::class);
 $router->get('/candidates/admin/deleted', [\App\Controller\CandidateController::class, 'adminDeleted'])->middleware(AdminMiddleware::class);
+$router->get('/candidates/admin/export', [\App\Controller\CandidateController::class, 'exportExcel'])->middleware(AdminMiddleware::class);
 
 // Пользователи
 // $router->get('/users', [\App\Controller\UserController::class, 'index']);
@@ -100,6 +154,7 @@ $router->get('/users/admin/edit', [\App\Controller\UserController::class, 'admin
 $router->put('/users/admin/update', [\App\Controller\UserController::class, 'adminUpdate'])->middleware(AdminMiddleware::class);
 $router->delete('/users/admin/delete', [\App\Controller\UserController::class, 'adminDelete'])->middleware(AdminMiddleware::class);
 $router->get('/users/admin/deleted', [\App\Controller\UserController::class, 'adminDeleted'])->middleware(AdminMiddleware::class);
+$router->get('/users/admin/export', [\App\Controller\UserController::class, 'exportExcel'])->middleware(AdminMiddleware::class);
 // // Страница активных пользователей
 // $router->get('/users-page', function () {
 //     include __DIR__ . '/users-db.php';
@@ -114,6 +169,10 @@ $router->post('/captcha/verify', [\App\Controller\CaptchaController::class, 'ver
 $router->post('/votes', [\App\Controller\VoteController::class, 'voted']);
 $router->get('/votes/admin', [\App\Controller\VoteController::class, 'index'])->middleware(AdminMiddleware::class);
 $router->get('/votes/admin/export', [\App\Controller\VoteController::class, 'exportExcel'])->middleware(AdminMiddleware::class);
+$router->get('/votes/admin/export-template', [\App\Controller\VoteController::class, 'exportTemplate'])->middleware(AdminMiddleware::class);
+$router->post('/votes/admin/import', [\App\Controller\VoteController::class, 'importExcel'])->middleware(AdminMiddleware::class);
+$router->get('/votes/admin/export-pdf', [\App\Controller\VoteController::class, 'exportPdf'])->middleware(AdminMiddleware::class);
+$router->get('/votes/admin/export-csv', [\App\Controller\VoteController::class, 'exportCsv'])->middleware(AdminMiddleware::class);
 $router->get('/votes/admin', [\App\Controller\VoteController::class, 'index'])->middleware(\App\Middleware\AdminMiddleware::class);
 $router->get('/votes/admin/deleted', [\App\Controller\VoteController::class, 'deletedIndex'])->middleware(\App\Middleware\AdminMiddleware::class);
 $router->put('/votes/admin/update', [\App\Controller\VoteController::class, 'adminUpdate'])->middleware(\App\Middleware\AdminMiddleware::class);
@@ -137,6 +196,7 @@ $router->get('/auth/vk', [\App\Controller\AuthController::class, 'vkRedirect']);
 $router->get('/auth/vk/callback', [\App\Controller\AuthController::class, 'vkCallback']);
 $router->post('/auth/send-code',  [\App\Controller\AuthController::class, 'sendCode']);
 $router->post('/auth/check-code', [\App\Controller\AuthController::class, 'checkCode']);
+$router->post('/auth/check-district', [\App\Controller\AuthController::class, 'checkDistrict']);
 // выход пользователя
 $router->post('/auth/logout', [\App\Controller\AuthController::class, 'logoutUser']);
 

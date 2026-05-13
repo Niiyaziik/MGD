@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers.forEach(header => {
             const indicator = header.querySelector(".sort-indicator");
             const field = header.dataset.field;
-            
+
             if (currentSortField === field) {
                 indicator.textContent = currentSortDir === "asc" ? " ↑" : " ↓";
                 header.classList.add("sorted");
@@ -97,8 +97,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function compareRows(a, b, field, dir) {
         const mul = dir === "asc" ? 1 : -1;
-        const va = (a[field] ?? "").toString().toLowerCase();
-        const vb = (b[field] ?? "").toString().toLowerCase();
+
+        const vaRaw = a[field];
+        const vbRaw = b[field];
+
+        // ===== ЧИСЛА =====
+        const na = Number(vaRaw);
+        const nb = Number(vbRaw);
+
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+            return (na - nb) * mul;
+        }
+
+        // ===== СТРОКИ =====
+        const va = (vaRaw ?? "").toString().toLowerCase();
+        const vb = (vbRaw ?? "").toString().toLowerCase();
+
         if (va < vb) return -1 * mul;
         if (va > vb) return 1 * mul;
         return 0;
@@ -162,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const out = await res.json().catch(() => ({}));
 
             if (!res.ok || out.ok === false) {
-                alert("Ошибка удаления: " + (out.error || "Неизвестная ошибка"));
+                showMessage("Ошибка удаления: " + (out.error || "Неизвестная ошибка"), "Ошибка");
                 return;
             }
 

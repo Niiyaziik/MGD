@@ -132,7 +132,7 @@ class UserRepository implements UserRepositoryInterface
             LEFT JOIN house    h ON u.house_id    = h.id
             LEFT JOIN districts d ON u.district_id = d.id
             WHERE $whereDeleted
-            ORDER BY u.id DESC
+            ORDER BY u.id ASC
         ";
         
         error_log("User deleted? ={$whereDeleted}");

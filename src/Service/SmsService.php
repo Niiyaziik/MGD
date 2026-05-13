@@ -34,6 +34,7 @@ class SmsService
 
         error_log("SmsService::sendCodeToPhone: creating code for phone {$phone}, ip={$ip}");
 
+        // Сохраняем код в БД (это главное - код должен быть доступен для проверки)
         $this->phoneCodes->createCode($phone, $code, $ip);
 
         $text = "Код подтверждения: {$code}";
@@ -54,13 +55,12 @@ class SmsService
 
         error_log("SmsService::sendCodeToPhone: request URL = {$url}");
 
+        // Пытаемся отправить SMS, но не блокируем процесс, если не получилось
         $resp = @file_get_contents($url);
         if ($resp === false) {
-            error_log("SmsService::sendCodeToPhone: sms.ru send error: no response for phone {$phone}, code {$code}");
-            return [
-                'ok'    => false,
-                'error' => 'Не удалось отправить SMS. Попробуйте позже.',
-            ];
+            error_log("SmsService::sendCodeToPhone: sms.ru send error: no response for phone {$phone}, code {$code} (code saved in DB)");
+            // Код сохранен в БД, возвращаем успех, даже если SMS не отправилось
+            return ['ok' => true, 'sms_sent' => false];
         }
 
         error_log("SmsService::sendCodeToPhone: raw response = {$resp}");
@@ -68,11 +68,9 @@ class SmsService
         $out = json_decode($resp, true);
 
         if (!is_array($out) || ($out['status'] ?? '') !== 'OK') {
-            error_log("SmsService::sendCodeToPhone: sms.ru response error: {$resp}");
-            return [
-                'ok'    => false,
-                'error' => 'Ошибка сервиса SMS. Попробуйте позже.',
-            ];
+            error_log("SmsService::sendCodeToPhone: sms.ru response error: {$resp} (code saved in DB)");
+            // Код сохранен в БД, возвращаем успех, даже если SMS не отправилось
+            return ['ok' => true, 'sms_sent' => false];
         }
 
         $smsInfo = $out['sms'][$phone] ?? null;
@@ -80,16 +78,15 @@ class SmsService
             error_log(
                 "SmsService::sendCodeToPhone: sms.ru number error for {$phone}: "
                 . json_encode($smsInfo, JSON_UNESCAPED_UNICODE)
+                . " (code saved in DB)"
             );
-            return [
-                'ok'    => false,
-                'error' => 'Не удалось отправить SMS на указанный номер.',
-            ];
+            // Код сохранен в БД, возвращаем успех, даже если SMS не отправилось
+            return ['ok' => true, 'sms_sent' => false];
         }
 
-        error_log("SmsService::sendCodeToPhone: OK for {$phone}");
+        error_log("SmsService::sendCodeToPhone: OK for {$phone}, SMS sent successfully");
 
-        return ['ok' => true];
+        return ['ok' => true, 'sms_sent' => true];
     }
 
     /**
@@ -109,6 +106,70 @@ class SmsService
         }
 
         return $this->sendCodeToPhone((string)$voter['phone']);
+    }
+
+    /**
+     * Проверка кода для произвольного телефона
+     */
+    public function checkCodeForPhone(string $rawPhone, string $code): array
+    {
+        error_log("SmsService::checkCodeForPhone: raw phone = '{$rawPhone}', code = '{$code}'");
+
+        $phone = $this->normalizeSmsPhone($rawPhone);
+        error_log("SmsService::checkCodeForPhone: normalized phone = " . var_export($phone, true));
+
+        if ($phone === null) {
+            error_log("SmsService::checkCodeForPhone: phone normalization failed");
+            return [
+                'ok'    => false,
+                'error' => 'Неверный формат телефона',
+            ];
+        }
+
+        $code = trim($code);
+        if ($code === '') {
+            return [
+                'ok'    => false,
+                'error' => 'Не указан код',
+            ];
+        }
+
+        error_log("SmsService::checkCodeForPhone: checking code for phone {$phone}");
+
+        $row = $this->phoneCodes->findValid($phone, $code, 600);
+        
+        if (!$row) {
+            error_log("SmsService::checkCodeForPhone: code not found or expired for phone {$phone}");
+            return [
+                'ok'    => false,
+                'error' => 'Неверный или просроченный код',
+            ];
+        }
+
+        error_log("SmsService::checkCodeForPhone: code found, marking as used, id = {$row['id']}");
+        $this->phoneCodes->markUsed((int)$row['id']);
+
+        error_log("SmsService::checkCodeForPhone: OK for phone {$phone}");
+        return ['ok' => true];
+    }
+
+    /**
+     * Проверка кода для текущего голосующего (телефон из сессии)
+     */
+    public function checkCodeForCurrentVoter(string $code): array
+    {
+        $voter = $_SESSION['voter'] ?? null;
+        error_log('SmsService::checkCodeForCurrentVoter: session voter = ' . json_encode($voter, JSON_UNESCAPED_UNICODE));
+
+        if (!$voter || empty($voter['phone'])) {
+            error_log('SmsService::checkCodeForCurrentVoter: no voter or phone in session');
+            return [
+                'ok'    => false,
+                'error' => 'Не удалось определить номер телефона для проверки кода.',
+            ];
+        }
+
+        return $this->checkCodeForPhone((string)$voter['phone'], $code);
     }
 
     // нормализация телефона — твой рабочий метод normalizeSmsPhone(...)

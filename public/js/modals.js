@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let successModal = null;
   let adminModal = null;
   let captchaModal = null;
+  let warningModal = null;
 
   let hiddenInput = null;
   let form = null;
@@ -90,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!candidateId) {
       console.warn("Не удалось определить ID кандидата для голосования", btn);
-      alert("Не удалось определить кандидата для голосования.");
+      showMessage("Не удалось определить кандидата для голосования.", "Ошибка");
       return;
     }
 
@@ -103,28 +104,24 @@ document.addEventListener("DOMContentLoaded", () => {
       hiddenInput.value = candidateId;
     }
 
-    const card = btn.closest(".candidate-card, .candidate-page, .candidate-item, .deputat");
-
     const modalPhoto = document.getElementById("vote-candidate-photo");
     const modalName = document.getElementById("vote-candidate-name");
 
-    // ==== ФОТО ====
+    // Сначала пытаемся найти данные в DOM (быстро)
+    const card = btn.closest(".candidate-card, .candidate-page, .candidate-item, .deputat, .my-deputat__item");
+
+    // ==== ФОТО (из DOM) ====
     if (modalPhoto) {
       let img = null;
-
       if (card) {
         img = card.querySelector(
-          ".candidates-card__photo, .candidate-photo, .candidate__photo, .deputat__image"
+          ".candidates-card__photo, .candidate-photo, .candidate__photo, .deputat__image, .my-deputat__image"
         );
       }
-
-      // запасной вариант: ищем глобально на странице кандидата
       if (!img) {
-        img =
-          document.querySelector(".deputat__image") ||
+        img = document.querySelector(".deputat__image, .my-deputat__image") ||
           document.querySelector(".candidates-card__photo");
       }
-
       if (img && img.src) {
         modalPhoto.src = img.src;
         modalPhoto.alt = img.alt || "Фото кандидата";
@@ -134,42 +131,67 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // ==== ФИО ====
+    // ==== ФИО (из DOM) ====
     if (modalName) {
       let nameEl = null;
-
       if (card) {
         nameEl = card.querySelector(
-          ".candidate-card__name, .candidate-name, .candidate__name, .deputat__name"
+          ".candidate-card__name, .candidate-name, .candidate__name, .deputat__name, .my-deputat__name"
         );
       }
-
-      // запасной вариант: ищем заголовок кандидата глобально
       if (!nameEl) {
-        nameEl =
-          document.querySelector(".deputat__name") ||
+        nameEl = document.querySelector(".deputat__name, .my-deputat__name") ||
           document.querySelector(".candidate-card__name") ||
           document.querySelector(".candidate-name");
       }
-
       if (nameEl) {
-        // Берём текст, чистим пробелы
         const text = nameEl.textContent.replace(/\s+/g, " ").trim();
         const parts = text.split(" ");
-
         const lastname = parts[0] || "";
         const firstname = parts[1] || "";
-        const middlename = parts.slice(2).join(" "); // всё, что осталось, считаем отчеством
-
-        // Пишем сразу в модалку:
-        // "Фамилия Имя" на первой строке, отчество — на второй
+        const middlename = parts.slice(2).join(" ");
         modalName.innerHTML =
-          `${lastname} ${firstname}` +
+          `${lastname} ${firstname}`.trim() +
           (middlename ? `<br>${middlename}` : "");
       } else {
         modalName.textContent = "Кандидат";
       }
     }
+
+    // Затем загружаем данные по API и обновляем (если нужно)
+    (async () => {
+      try {
+        const res = await fetch(`/candidate?format=json&id=${candidateId}`);
+        if (!res.ok) throw new Error('Ошибка загрузки данных кандидата');
+        const candidate = await res.json();
+
+        // ==== ФОТО (обновляем из API) ====
+        if (modalPhoto) {
+          modalPhoto.src = candidate.photo || "/assets/img/candidates/placeholder.jpeg";
+          const fio = `${candidate.surname || ''} ${candidate.name || ''} ${candidate.patronymic || ''}`.trim();
+          modalPhoto.alt = fio || "Фото кандидата";
+        }
+
+        // ==== ФИО (обновляем из API) ====
+        if (modalName) {
+          const surname = candidate.surname || "";
+          const name = candidate.name || "";
+          const patronymic = candidate.patronymic || "";
+
+          if (surname || name) {
+            // "Фамилия Имя" на первой строке, отчество — на второй
+            modalName.innerHTML =
+              `${surname} ${name}`.trim() +
+              (patronymic ? `<br>${patronymic}` : "");
+          } else {
+            modalName.textContent = "Кандидат";
+          }
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки данных кандидата из API:", err);
+        // Данные уже установлены из DOM, ничего не делаем
+      }
+    })();
     // ЕСЛИ уже авторизован (есть voter в сессии) — сразу модалка голосования
     if (voterAuthorized) {
       if (!successModal) {
@@ -237,6 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     captchaModal = qs("#captcha-modal");
     finishModal = qs("#vote-finish-modal");
     phoneModal = qs("#phone-confirm-modal");
+    warningModal = qs("#warning-modal");
 
 
     if (!authModal || !successModal || !captchaModal || !phoneModal) return;
@@ -251,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const captchaBackdrop = qs(".modal__backdrop", captchaModal);
     const adminBackdrop = adminModal ? qs(".modal__backdrop", adminModal) : null;
     const finishBackdrop = finishModal ? qs(".modal__backdrop", finishModal) : null;
+    const warningBackdrop = warningModal ? qs(".modal__backdrop", warningModal) : null;
 
     hiddenInput = qs("#candidate-id");
     form = qs("#vote-form");
@@ -450,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
             errorBox.textContent = "Укажите логин и пароль";
             errorBox.style.display = "block";
           } else {
-            alert("Укажите логин и пароль");
+            showMessage("Укажите логин и пароль", "Ошибка");
           }
           return;
         }
@@ -474,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
               errorBox.textContent = msg;
               errorBox.style.display = "block";
             } else {
-              alert(msg);
+              showMessage(msg, "Ошибка");
             }
             return;
           }
@@ -491,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
             errorBox.textContent = "Ошибка при входе администратора. Попробуйте позже.";
             errorBox.style.display = "block";
           } else {
-            alert("Ошибка при входе администратора. Попробуйте позже.");
+            showMessage("Ошибка при входе администратора. Попробуйте позже.", "Ошибка");
           }
         }
       });
@@ -513,6 +537,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (finishBackdrop) {
       finishBackdrop.addEventListener("click", () => closeModal(finishModal));
     }
+    if (warningBackdrop) {
+      warningBackdrop.addEventListener("click", () => closeModal(warningModal));
+    }
+
     // ESC закрывает все модалки
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
@@ -572,12 +600,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const out = await resp.json().catch(() => ({}));
 
         if (!resp.ok || out.ok === false) {
-          alert(out.error || "Ошибка авторизации");
+          showMessage(out.error || "Ошибка авторизации", "Ошибка");
           return; // НЕ открываем капчу
         }
       } catch (err) {
         console.error("Ошибка /auth/precheck:", err);
-        alert("Не удалось выполнить проверку номера. Попробуйте позже.");
+        showMessage("Не удалось выполнить проверку номера. Попробуйте позже.", "Ошибка");
         return;
       }
       console.log("Авторизация: подготовили данные, показываем капчу", pendingAuthData);
@@ -616,7 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
             captchaSubmitBtn.disabled = false;
             captchaSubmitBtn.classList.remove("btn-disabled");
           }
-          alert("Ошибка загрузки reCAPTCHA");
+          showMessage("Ошибка загрузки reCAPTCHA", "Ошибка");
           return;
         }
 
@@ -626,7 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
             captchaSubmitBtn.disabled = false;
             captchaSubmitBtn.classList.remove("btn-disabled");
           }
-          alert("Подтвердите, что вы не робот");
+          showMessage("Подтвердите, что вы не робот", "Ошибка");
           return;
         }
 
@@ -649,7 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
               captchaSubmitBtn.classList.remove("btn-disabled");
             }
 
-            alert(out.error || "Проверка reCAPTCHA не пройдена");
+            showMessage(out.error || "Проверка reCAPTCHA не пройдена", "Ошибка");
             return;
           }
 
@@ -661,7 +689,7 @@ document.addEventListener("DOMContentLoaded", () => {
             captchaSubmitBtn.classList.remove("btn-disabled");
           }
 
-          alert("Не удалось проверить капчу. Попробуйте позже");
+          showMessage("Не удалось проверить капчу. Попробуйте позже", "Ошибка");
           return;
         }
 
@@ -677,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
             captchaSubmitBtn.classList.remove("btn-disabled");
           }
 
-          alert("Данные авторизации потеряны. Попробуйте ещё раз.");
+          showMessage("Данные авторизации потеряны. Попробуйте ещё раз.", "Ошибка");
           closeModal(captchaModal);
           return;
         }
@@ -697,38 +725,18 @@ document.addEventListener("DOMContentLoaded", () => {
           const out = await resp.json().catch(() => ({}));
 
           if (!resp.ok || out.ok === false) {
-            alert(out.error || "Ошибка авторизации");
+            showMessage(out.error || "Ошибка авторизации", "Ошибка");
             return;
           }
 
-          // можно ли голосовать за выбранного кандидата?
-          if (out.can_vote) {
-            console.log("Округ совпадает, открываем модалку голосования");
-            closeModal(captchaModal);
-            openModal(successModal);
-          } else {
-            // округа не совпадают
-            const userDistrict = out.user_district_num || out.user_district_id;
-            alert(
-              `Вы не можете проголосовать за данного кандидата, ` +
-              `поскольку он относится к другому округу.\n\n` +
-              `Ваш округ голосования: ${userDistrict}.`
-            );
-
-            closeModal(captchaModal);
-
-            // перенаправляем на /candidates с фильтром по округу пользователя
-            if (userDistrict) {
-              window.location.href =
-                "/candidates?district=" + encodeURIComponent(userDistrict);
-            } else {
-              window.location.href = "/candidates";
-            }
-          }
+          // Авторизация успешна - открываем модалку голосования
+          console.log("Авторизация успешна, открываем модалку голосования");
+          closeModal(captchaModal);
+          openModal(successModal);
 
         } catch (err) {
           console.error("Ошибка /auth/login:", err);
-          alert("Не удалось выполнить авторизацию. Попробуйте позже.");
+          showMessage("Не удалось выполнить авторизацию. Попробуйте позже.", "Ошибка");
         }
       });
     }
@@ -764,37 +772,15 @@ document.addEventListener("DOMContentLoaded", () => {
             if (authModal) {
               openModal(authModal);
             } else {
-              alert(out.error || "Вы не авторизованы как голосующий");
+              showMessage(out.error || "Вы не авторизованы как голосующий", "Ошибка");
             }
 
             return;
           }
 
-          // 2) если ошибка округа — закрываем модалку и уводим на страницу его округа
-          if (resp.status === 422 && (out.user_district_num || out.user_district_id)) {
-            const userDistrict =
-              out.user_district_num ||
-              out.user_district_id;
-
-            // сначала закрываем модалку голосования
-            closeModal(successModal);
-
-            // показываем сообщение об ошибке
-            alert(out.error || "Вы не можете голосовать за кандидата из другого округа.");
-
-            // редирект на страницу кандидатов его округа
-            if (userDistrict) {
-              window.location.href =
-                "/candidates?district=" + encodeURIComponent(userDistrict);
-            } else {
-              window.location.href = "/candidates";
-            }
-
-            return;
-          }
 
           // 3) любые остальные ошибки — просто показываем
-          alert(out.error || "Ошибка при отправке голоса");
+          showMessage(out.error || "Ошибка при отправке голоса", "Ошибка");
           return;
         }
 
@@ -824,41 +810,151 @@ document.addEventListener("DOMContentLoaded", () => {
             }).catch(() => { });
           }, 3000);
         } else {
-          alert("Ваш голос принят. Спасибо за участие!");
+          showMessage("Ваш голос принят. Спасибо за участие!", "Успех");
         }
 
       } catch (err) {
         console.error("Ошибка при голосовании:", err);
-        alert("Не удалось отправить голос. Попробуйте позже.");
+        showMessage("Не удалось отправить голос. Попробуйте позже.", "Ошибка");
       }
     }
 
     if (confirmBtn) {
       confirmBtn.addEventListener("click", async () => {
-        if (!pendingAuthData || !pendingAuthData.phone) {
-          alert("Не удалось определить номер телефона для отправки SMS.");
+        // Сначала проверяем округ перед отправкой SMS
+        const candidateId = hiddenInput ? hiddenInput.value : currentCandidateId;
+        if (!candidateId) {
+          showMessage("Не удалось определить кандидата для голосования.", "Ошибка");
           return;
         }
 
         try {
+          // Проверяем округ
+          const districtCheckResp = await fetch("/auth/check-district", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({ candidate_id: candidateId })
+          });
+
+          const districtCheckOut = await districtCheckResp.json().catch(() => ({}));
+
+          if (!districtCheckResp.ok || !districtCheckOut.can_vote) {
+            // Округа не совпадают
+            const userDistrict = districtCheckOut.user_district_num || districtCheckOut.user_district_id;
+
+            closeModal(successModal);
+
+            // Открываем модалку предупреждения
+            if (!warningModal) {
+              warningModal = qs("#warning-modal");
+            }
+
+            if (warningModal) {
+              const warningMessage = qs("#warning-message", warningModal);
+              const warningDistrict = qs("#warning-user-district", warningModal);
+
+              if (warningMessage) {
+                warningMessage.textContent =
+                  "Вы не можете проголосовать за данного кандидата, поскольку он относится к другому округу.";
+              }
+
+              if (warningDistrict) {
+                warningDistrict.textContent = userDistrict || "не определён";
+              }
+
+              openModal(warningModal);
+
+              // После закрытия модалки перенаправляем на страницу кандидатов
+              const warningOkBtn = qs("#warning-ok-btn", warningModal);
+              if (warningOkBtn) {
+                // Удаляем старые обработчики, если они есть
+                const newBtn = warningOkBtn.cloneNode(true);
+                warningOkBtn.parentNode.replaceChild(newBtn, warningOkBtn);
+
+                newBtn.addEventListener("click", () => {
+                  closeModal(warningModal);
+                  if (userDistrict) {
+                    window.location.href = "/candidates?district=" + encodeURIComponent(userDistrict);
+                  } else {
+                    window.location.href = "/candidates";
+                  }
+                });
+              }
+            } else {
+              // Fallback на showMessage, если модалка не загрузилась
+              showMessage(
+                `Вы не можете проголосовать за данного кандидата, ` +
+                `поскольку он относится к другому округу.\n\n` +
+                `Ваш округ голосования: ${userDistrict || "не определён"}.`,
+                "Ошибка округа"
+              );
+
+              if (userDistrict) {
+                window.location.href = "/candidates?district=" + encodeURIComponent(userDistrict);
+              } else {
+                window.location.href = "/candidates";
+              }
+            }
+            return;
+          }
+
+          // Округ совпадает - продолжаем с отправкой SMS
+          // Определяем телефон: сначала из pendingAuthData, потом из lastAuthPhone, потом из сессии
+          let phoneToUse = null;
+
+          if (pendingAuthData && pendingAuthData.phone) {
+            phoneToUse = pendingAuthData.phone;
+          } else if (lastAuthPhone) {
+            phoneToUse = lastAuthPhone;
+          } else if (voterAuthorized) {
+            // Если авторизован, получаем телефон из сессии
+            try {
+              const statusResp = await fetch("/auth/status", {
+                headers: { "Accept": "application/json" }
+              });
+              const statusData = await statusResp.json().catch(() => ({}));
+              if (statusData.voter && statusData.voter.phone) {
+                phoneToUse = statusData.voter.phone;
+              }
+            } catch (err) {
+              console.error("Ошибка получения статуса:", err);
+            }
+          }
+
+          if (!phoneToUse) {
+            showMessage("Не удалось определить номер телефона для отправки SMS.", "Ошибка");
+            return;
+          }
+
           const resp = await fetch("/auth/send-code", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Accept": "application/json"
             },
-            body: JSON.stringify({ phone: pendingAuthData.phone })
+            body: JSON.stringify({ phone: phoneToUse })
           });
 
           const out = await resp.json().catch(() => ({}));
           console.log("Ответ /auth/send-code =", out);
 
+          // Код сохранен в БД, даже если SMS не отправилось - продолжаем процесс
           if (!resp.ok || out.ok === false) {
-            alert(out.error || "Не удалось отправить SMS с кодом подтверждения.");
-            return;
+            // Проверяем, не связана ли ошибка с форматом телефона (это критично)
+            const errorMsg = out.error || "";
+            if (errorMsg.includes("формат телефона") || errorMsg.includes("Неверный формат")) {
+              showMessage(errorMsg || "Неверный формат телефона.", "Ошибка");
+              return;
+            }
+            // Для остальных ошибок (например, проблемы с отправкой SMS) - продолжаем
+            // Код уже сохранен в БД, пользователь может ввести его вручную
+            console.warn("SMS не отправлено, но код сохранен в БД:", errorMsg);
           }
 
-          // Код отправлен: закрываем модалку голосования и открываем ввод кода
+          // Код сохранен в БД: закрываем модалку голосования и открываем ввод кода
           closeModal(successModal);
 
           if (phoneModal) {
@@ -867,11 +963,19 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             openModal(phoneModal);
           } else {
-            alert("Не найдена модалка подтверждения по телефону.");
+            showMessage("Не найдена модалка подтверждения по телефону.", "Ошибка");
           }
         } catch (err) {
           console.error("Ошибка /auth/send-code:", err);
-          alert("Не удалось отправить SMS. Попробуйте позже.");
+          // При сетевой ошибке тоже продолжаем - возможно код уже сохранен
+          // Пользователь может попробовать ввести код
+          closeModal(successModal);
+          if (phoneModal) {
+            if (phoneCodeInput) {
+              phoneCodeInput.value = "";
+            }
+            openModal(phoneModal);
+          }
         }
       });
     }
@@ -880,8 +984,29 @@ document.addEventListener("DOMContentLoaded", () => {
       phoneCodeForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        if (!pendingAuthData || !pendingAuthData.phone) {
-          alert("Не удалось определить номер телефона.");
+        let phoneToUse = null;
+
+        if (pendingAuthData && pendingAuthData.phone) {
+          phoneToUse = pendingAuthData.phone.trim();
+        } else if (lastAuthPhone) {
+          phoneToUse = lastAuthPhone.trim();
+        } else if (voterAuthorized) {
+          // Если авторизован, получаем телефон из сессии
+          try {
+            const statusResp = await fetch("/auth/status", {
+              headers: { "Accept": "application/json" }
+            });
+            const statusData = await statusResp.json().catch(() => ({}));
+            if (statusData.voter && statusData.voter.phone) {
+              phoneToUse = statusData.voter.phone.trim();
+            }
+          } catch (err) {
+            console.error("Ошибка получения статуса:", err);
+          }
+        }
+
+        if (!phoneToUse) {
+          showMessage("Не удалось определить номер телефона.", "Ошибка");
           return;
         }
 
@@ -895,22 +1020,33 @@ document.addEventListener("DOMContentLoaded", () => {
         phoneCodeSubmitBtn.classList.add("btn-disabled");
 
         try {
+          const requestData = {
+            phone: phoneToUse,
+            code: code
+          };
+          console.log("Отправка запроса /auth/check-code:", requestData);
+
           const resp = await fetch("/auth/check-code", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Accept": "application/json"
             },
-            body: JSON.stringify({
-              phone: pendingAuthData.phone,
-              code: code
-            })
+            body: JSON.stringify(requestData)
           });
 
-          const out = await resp.json().catch(() => ({}));
+          console.log("Статус ответа /auth/check-code:", resp.status, resp.statusText);
+
+          const out = await resp.json().catch((err) => {
+            console.error("Ошибка парсинга JSON:", err);
+            return {};
+          });
+
+          console.log("Ответ /auth/check-code:", out);
 
           if (!resp.ok || out.ok === false) {
-            alert(out.error || "Неверный или просроченный код из SMS.");
+            console.error("Ошибка проверки кода:", out.error || "Неизвестная ошибка");
+            showMessage(out.error || "Неверный или просроченный код из SMS.", "Ошибка");
             phoneCodeSubmitBtn.disabled = false;
             phoneCodeSubmitBtn.classList.remove("btn-disabled");
             return;
@@ -921,7 +1057,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await sendVoteRequest();
         } catch (err) {
           console.error("Ошибка /auth/check-code:", err);
-          alert("Не удалось проверить код. Попробуйте позже.");
+          showMessage("Не удалось проверить код. Попробуйте позже.", "Ошибка");
         } finally {
           phoneCodeSubmitBtn.disabled = false;
           phoneCodeSubmitBtn.classList.remove("btn-disabled");
@@ -1031,12 +1167,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initAddressAutocomplete(input, onChangeValid) {
   const wrapper = input.parentElement;
+  if (!wrapper) {
+    console.error("Address autocomplete: wrapper not found");
+    return;
+  }
+
   const suggestBox = document.createElement("div");
   suggestBox.className = "address-suggest";
   suggestBox.style.display = "none";
 
   wrapper.style.position = "relative";
   wrapper.appendChild(suggestBox);
+
+  console.log("Address autocomplete initialized for input:", input);
 
   let timer = null;
 
@@ -1052,10 +1195,13 @@ function initAddressAutocomplete(input, onChangeValid) {
     if (timer) clearTimeout(timer);
 
     if (withoutCity.length < 2) {
+      console.log("Input too short:", withoutCity.length);
       suggestBox.style.display = "none";
       suggestBox.innerHTML = "";
       return;
     }
+
+    console.log("Input value:", input.value, "Without city:", withoutCity);
 
     timer = setTimeout(async () => {
       try {
@@ -1069,13 +1215,26 @@ function initAddressAutocomplete(input, onChangeValid) {
           return;
         }
 
+        console.log("Fetching suggestions for:", streetPart);
         const resp = await fetch(
           "/address/suggest?query=" + encodeURIComponent(streetPart),
           { headers: { "Accept": "application/json" } }
         );
-        if (!resp.ok) throw new Error("Ошибка запроса адреса");
+
+        console.log("Response status:", resp.status, resp.statusText);
+
+        if (!resp.ok) {
+          console.error("Request failed:", resp.status, resp.statusText);
+          throw new Error("Ошибка запроса адреса");
+        }
+
         let list = await resp.json();
-        if (!Array.isArray(list)) list = [];
+        console.log("Received suggestions:", list);
+
+        if (!Array.isArray(list)) {
+          console.warn("Response is not an array:", list);
+          list = [];
+        }
 
         if (housePart) {
           const digits = housePart.replace(/\D/g, "");
@@ -1083,15 +1242,18 @@ function initAddressAutocomplete(input, onChangeValid) {
             list = list.filter(item =>
               String(item.house || "").includes(digits)
             );
+            console.log("Filtered by house part:", list);
           }
         }
 
         if (!list.length) {
+          console.log("No suggestions to show");
           suggestBox.style.display = "none";
           suggestBox.innerHTML = "";
           return;
         }
 
+        console.log("Showing", list.length, "suggestions");
         suggestBox.innerHTML = list
           .map(item => {
             const street = item.street || "";
@@ -1108,6 +1270,7 @@ function initAddressAutocomplete(input, onChangeValid) {
           .join("");
 
         suggestBox.style.display = "block";
+        console.log("Suggestions box displayed");
       } catch (e) {
         console.error(e);
         suggestBox.style.display = "none";

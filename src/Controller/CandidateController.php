@@ -4,6 +4,9 @@ namespace App\Controller;
 use App\Repository\Contract\CandidateRepositoryInterface;
 use DomainException;
 use Throwable;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class CandidateController extends BaseController
 {
@@ -16,14 +19,13 @@ class CandidateController extends BaseController
 
         if ($json) {
             $all   = ($_GET['all'] ?? '') === '1';
-            $limit = (int)($_GET['limit'] ?? 5);
+            $limit = (int)($_GET['limit'] ?? 8);
             $data  = $all ? $this->candidates->all() : $this->candidates->first($limit);
             $this->json($data);
             return;
         }
 
-        header('Content-Type: text/html; charset=utf-8');
-        readfile(__DIR__ . '/../../public/candidates.html');
+        require __DIR__ . '/../../public/candidate/candidates.php';
     }
 
     public function adminIndex(): void
@@ -37,14 +39,12 @@ class CandidateController extends BaseController
             return;
         }
 
-        header('Content-Type: text/html; charset=utf-8');
-        readfile(__DIR__ . '/../../public/candidates-admin.html');
+        require __DIR__ . '/../../public/candidate-admin/candidates-admin.php';
     }
 
     public function showAdd(): void
     {
-        header('Content-Type: text/html; charset=utf-8');
-        readfile(__DIR__ . '/../../public/candidate-add-admin.html');
+        require __DIR__ . '/../../public/candidate-admin/candidate-add-admin.php';
     }
 
     public function show(): void
@@ -63,9 +63,7 @@ class CandidateController extends BaseController
         return;
         }
 
-        header_remove('Content-Type');
-        header('Content-Type: text/html; charset=utf-8');
-        readfile(__DIR__ . '/../../public/candidate.html');
+        require __DIR__ . '/../../public/candidate/candidate.php';
     }
 
     public function store(): void
@@ -160,7 +158,7 @@ class CandidateController extends BaseController
                 $this->json(['ok' => false, 'error' => 'Кандидат не найден'], 404);
                 return;
             }
-            include __DIR__ . '/../../public/candidate-update-admin.html';
+            require __DIR__ . '/../../public/candidate-admin/candidate-update-admin.php';
 
         } catch (Throwable $e) {
             error_log("EDIT ERROR: " . $e->getMessage());
@@ -282,16 +280,86 @@ class CandidateController extends BaseController
             return;
         }
 
-        header_remove('Content-Type');
-        header('Content-Type: text/html; charset=utf-8');
-        include __DIR__ . '/../../public/candidates-db.php';
+        require __DIR__ . '/../../public/candidate-db/candidates-db.php';
     }
 
-    /**
-     * Удаление кандидата (мягкое, deleted_at = NOW()).
-     * DELETE /candidates/admin/delete
-     * body: { "id": 123 }
-     */
+    public function exportExcel(): void
+    {
+        $deleted = isset($_GET['deleted']) ? (int)$_GET['deleted'] : 0;
+
+        try {
+            $rows = $this->candidates->getAdminCandidates($deleted);
+        } catch (Throwable $e) {
+            $rows = [];
+        }
+
+        if (!is_array($rows)) {
+            $rows = [];
+        }
+
+        $spreadsheet = new Spreadsheet();
+
+        $sheet1 = $spreadsheet->getActiveSheet();
+        $sheet1->setTitle('Кандидаты');
+
+        $sheet1->fromArray(
+            ['ID', 'Дата регистрации', 'Фамилия', 'Имя', 'Отчество', 'Телефон', 'Фото', 'ВК', 'Улица', 'Дом', 'Округ'],
+            null,
+            'A1'
+        );
+
+        $rowIndex = 2;
+        $districtStats = [];
+
+        foreach ($rows as $row) {
+            $id         = $row['id'] ?? '';
+            $createdAt = $row['registration_date'] ?? ($row['created_at'] ?? ($row['created'] ?? ($row['date'] ?? '')));
+            $surname    = $row['surname'] ?? '';
+            $name       = $row['name'] ?? '';
+            $patronymic = $row['patronymic'] ?? '';
+            $phone      = $row['phone'] ?? '';
+            $photo      = $row['photo'] ?? '';
+            $vk         = $row['vk'] ?? ($row['vk_link'] ?? '');
+            $street     = $row['street'] ?? '';
+            $house      = $row['house'] ?? '';
+            $district   = $row['district'] ?? ($row['district_num'] ?? ($row['district_id'] ?? ''));
+
+            $sheet1->setCellValue("A{$rowIndex}", $id);
+            $sheet1->setCellValue("B{$rowIndex}", $createdAt);
+            $sheet1->setCellValue("C{$rowIndex}", $surname);
+            $sheet1->setCellValue("D{$rowIndex}", $name);
+            $sheet1->setCellValue("E{$rowIndex}", $patronymic);
+            $sheet1->setCellValue("F{$rowIndex}", $phone);
+            $sheet1->setCellValue("G{$rowIndex}", $photo);
+            $sheet1->setCellValue("H{$rowIndex}", $vk);
+            $sheet1->setCellValue("I{$rowIndex}", $street);
+            $sheet1->setCellValue("J{$rowIndex}", $house);
+            $sheet1->setCellValue("K{$rowIndex}", $district);
+
+            if ($district !== '') {
+                $key = (string)$district;
+                $districtStats[$key] = ($districtStats[$key] ?? 0) + 1;
+            }
+
+            $rowIndex++;
+        }
+
+        foreach (range('A', 'K') as $col) {
+            $sheet1->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $fileName = ($deleted ? 'Кандидаты-удалённые-' : 'Кандидаты-') . date('Y-m-d_H-i-s') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+
     public function adminDelete(): void
     {
         $this->requireMethod('DELETE');
@@ -318,16 +386,22 @@ class CandidateController extends BaseController
         }
     }
 
-        public function adminDeleted(): void
+    public function adminDeleted(): void
     {
         $this->requireMethod('GET');
 
-        try {
-            $list = $this->candidates->getAdminCandidates(1);
-            $this->json($list);
-        } catch (Throwable $e) {
-            $this->json(['ok' => false, 'error' => 'Ошибка загрузки удалённых пользователей'], 500);
+        $format  = $_GET['format']  ?? null;
+
+        if ($format === 'json') {
+            try {
+                $list = $this->candidates->getAdminCandidates(1);
+                $this->json($list);
+            } catch (Throwable $e) {
+                $this->json(['ok' => false, 'error' => 'Ошибка загрузки удалённых пользователей'], 500);
+            }
+            return;
         }
+        require __DIR__ . '/../../public/candidate-db/deleted-candidates-db.php';
     }
 
     public function adminEdit(int $id): void
@@ -346,6 +420,6 @@ class CandidateController extends BaseController
         $candidateData = $candidate;
 
         // подключаем шаблон из public
-        include __DIR__ . '/../../public/candidate-edit.php';
+        require __DIR__ . '/../../public/candidate-admin/candidate-edit.php';
     }
 }

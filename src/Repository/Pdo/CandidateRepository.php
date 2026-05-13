@@ -35,6 +35,7 @@ class CandidateRepository implements CandidateRepositoryInterface
     {
         $sql = "SELECT c.id, c.surname, c.name, c.patronymic, c.photo, c.email, c.district
                 FROM candidates c
+                WHERE c.deleted_at IS NULL
                 ORDER BY c.id ASC
                 LIMIT :limit";
         $st = $this->pdo->prepare($sql);
@@ -77,7 +78,7 @@ class CandidateRepository implements CandidateRepositoryInterface
             $data['patronymic'] ?? null,
             $data['phone'] ?? null,
             $data['district'] ?? null,
-            $data['address'] ?? null,
+            $data['address'] ?? " ",
             $data['photo'] ?? null,
             $data['email'] ?? null,
             $data['description'] ?? null,
@@ -97,7 +98,7 @@ class CandidateRepository implements CandidateRepositoryInterface
             $data['patronymic'] ?? null,
             $data['phone'] ?? null,
             $data['district'] ?? null,
-            $data['address'] ?? null,
+            $data['address'] ?? " ",
             $data['photo'] ?? null,
             $data['email'] ?? null,
             $data['description'] ?? null,
@@ -132,7 +133,7 @@ class CandidateRepository implements CandidateRepositoryInterface
             FROM candidates c
             LEFT JOIN districts d ON c.district = d.id
             WHERE $whereDeleted
-            ORDER BY c.id DESC
+            ORDER BY c.id ASC
         ";
 
         $st = $this->pdo->query($sql);
