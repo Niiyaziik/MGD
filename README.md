@@ -1,6 +1,8 @@
 # MGD
+
 ## Как запустить:
 
 1. Перейти в корень проекта
 2. Открыть терминал
-3. Ввести `php -S localhost:8000 -t public`
+3. Ввести `php -S localhost:8000 -t public/router.php`
+

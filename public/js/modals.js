@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const phoneOk = phoneInput &&
-        /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(phoneInput.value.trim());
+        /^\+7 \(9\d{2}\) \d{3}-\d{2}-\d{2}$/.test(phoneInput.value.trim());
 
       const addressOk = addressInput && addressInput.dataset.valid === "1";
 
@@ -407,13 +407,26 @@ document.addEventListener("DOMContentLoaded", () => {
         return result;
       }
 
+      function enforcePrefix(digits) {
+        if (!digits.length) return "79";
+        if (digits[0] === "8") digits = "7" + digits.slice(1);
+        if (digits[0] !== "7") digits = "7" + digits;
+        // Вторая цифра всегда 9
+        if (digits.length >= 2 && digits[1] !== "9") {
+          digits = "79" + digits.slice(2);
+        }
+        return digits;
+      }
+
       phoneInput.addEventListener("focus", function (e) {
         if (!e.target.value) {
-          lastDigits = "7";
+          lastDigits = "79";
           e.target.value = formatPhone(lastDigits);
           e.target.setSelectionRange(e.target.value.length, e.target.value.length);
         } else {
-          lastDigits = e.target.value.replace(/\D/g, "");
+          lastDigits = enforcePrefix(e.target.value.replace(/\D/g, ""));
+          e.target.value = formatPhone(lastDigits);
+          e.target.setSelectionRange(e.target.value.length, e.target.value.length);
         }
       });
 
@@ -429,6 +442,12 @@ document.addEventListener("DOMContentLoaded", () => {
           newDigits = newDigits.slice(0, -1);
         }
 
+        // Принудительно удерживаем префикс 79
+        if (newDigits.length >= 1) {
+          newDigits = enforcePrefix(newDigits);
+        }
+
+        newDigits = newDigits.slice(0, 11);
         lastDigits = newDigits;
         e.target.value = formatPhone(newDigits);
 
@@ -1167,25 +1186,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initAddressAutocomplete(input, onChangeValid) {
   const wrapper = input.parentElement;
-  if (!wrapper) {
-    console.error("Address autocomplete: wrapper not found");
-    return;
-  }
+  if (!wrapper) return;
 
   const suggestBox = document.createElement("div");
   suggestBox.className = "address-suggest";
   suggestBox.style.display = "none";
 
+  const hintAnchor = document.createElement("div");
+  hintAnchor.style.cssText = "height:0;overflow:visible;position:relative;";
+  const hintEl = document.createElement("div");
+  hintEl.className = "address-hint";
+  hintEl.textContent = "Выберите адрес с номером дома из списка";
+  hintEl.style.display = "none";
+  hintAnchor.appendChild(hintEl);
+
   wrapper.style.position = "relative";
   wrapper.appendChild(suggestBox);
+  wrapper.appendChild(hintAnchor);
 
-  console.log("Address autocomplete initialized for input:", input);
+  function showHint(show) {
+    hintEl.style.display = show ? "block" : "none";
+  }
 
   let timer = null;
+  const cache = new Map();
 
   input.addEventListener("input", () => {
     // как только пользователь что-то ручками меняет — адрес снова "не подтверждён"
     input.dataset.valid = "0";
+    showHint(false);
     if (typeof onChangeValid === "function") {
       onChangeValid();
     }
@@ -1195,88 +1224,54 @@ function initAddressAutocomplete(input, onChangeValid) {
     if (timer) clearTimeout(timer);
 
     if (withoutCity.length < 2) {
-      console.log("Input too short:", withoutCity.length);
       suggestBox.style.display = "none";
       suggestBox.innerHTML = "";
       return;
     }
 
-    console.log("Input value:", input.value, "Without city:", withoutCity);
-
     timer = setTimeout(async () => {
       try {
-        const m = withoutCity.match(/^([^,\d]+)[, ]*(.*)$/);
-        const streetPart = m && m[1] ? m[1].trim() : "";
-        const housePart = m && m[2] ? m[2].trim() : "";
-
-        if (!streetPart || streetPart.length < 2) {
-          suggestBox.style.display = "none";
-          suggestBox.innerHTML = "";
-          return;
-        }
-
-        console.log("Fetching suggestions for:", streetPart);
-        const resp = await fetch(
-          "/address/suggest?query=" + encodeURIComponent(streetPart),
-          { headers: { "Accept": "application/json" } }
-        );
-
-        console.log("Response status:", resp.status, resp.statusText);
-
-        if (!resp.ok) {
-          console.error("Request failed:", resp.status, resp.statusText);
-          throw new Error("Ошибка запроса адреса");
-        }
-
-        let list = await resp.json();
-        console.log("Received suggestions:", list);
-
-        if (!Array.isArray(list)) {
-          console.warn("Response is not an array:", list);
-          list = [];
-        }
-
-        if (housePart) {
-          const digits = housePart.replace(/\D/g, "");
-          if (digits) {
-            list = list.filter(item =>
-              String(item.house || "").includes(digits)
-            );
-            console.log("Filtered by house part:", list);
-          }
+        let list;
+        if (cache.has(withoutCity)) {
+          list = cache.get(withoutCity);
+        } else {
+          const resp = await fetch(
+            "/address/suggest?query=" + encodeURIComponent(withoutCity),
+            { headers: { "Accept": "application/json" } }
+          );
+          if (!resp.ok) throw new Error("Ошибка запроса адреса");
+          list = await resp.json();
+          if (!Array.isArray(list)) list = [];
+          cache.set(withoutCity, list);
         }
 
         if (!list.length) {
-          console.log("No suggestions to show");
           suggestBox.style.display = "none";
           suggestBox.innerHTML = "";
           return;
         }
 
-        console.log("Showing", list.length, "suggestions");
         suggestBox.innerHTML = list
           .map(item => {
-            const street = item.street || "";
-            const house = item.house || "";
-            const label = `${street}, ${house}`;
-            return `
-              <div class="address-suggest__item"
-                   data-street="${street.replace(/"/g, "&quot;")}"
-                   data-house="${house.replace(/"/g, "&quot;")}">
-                г. Ульяновск, ${label}
-              </div>
-            `;
+            const street   = item.street || "";
+            const house    = item.house  || "";
+            const complete = item.complete ? "1" : "0";
+            const label    = item.label  || (house ? `г. Ульяновск, ${street}, ${house}` : `г. Ульяновск, ${street}`);
+            return `<div class="address-suggest__item"
+                         data-street="${street.replace(/"/g, "&quot;")}"
+                         data-house="${house.replace(/"/g, "&quot;")}"
+                         data-complete="${complete}"
+                    >${label}</div>`;
           })
           .join("");
 
         suggestBox.style.display = "block";
-        console.log("Suggestions box displayed");
       } catch (e) {
         console.error(e);
         suggestBox.style.display = "none";
         suggestBox.innerHTML = "";
       }
-    }, 300);
+    }, 120);
   });
 
   // ВЫБОР ПОДСКАЗКИ — НА MOUSEDOWN, ЧТОБЫ УСПЕТЬ ДО BLUR У INPUT
@@ -1287,27 +1282,40 @@ function initAddressAutocomplete(input, onChangeValid) {
     // не даём браузеру сначала перевести фокус (blur input), а потом клик
     e.preventDefault();
 
-    const street = item.getAttribute("data-street") || "";
-    const house = item.getAttribute("data-house") || "";
+    const street   = item.getAttribute("data-street")   || "";
+    const house    = item.getAttribute("data-house")    || "";
+    const complete = item.getAttribute("data-complete") === "1";
 
-    input.value = `г. Ульяновск, ${street}, ${house}`;
-    input.dataset.valid = "1";
-
-    suggestBox.style.display = "none";
-    suggestBox.innerHTML = "";
-
-    if (typeof onChangeValid === "function") {
-      onChangeValid();
+    if (complete) {
+      input.value = `г. Ульяновск, ${street}, ${house}`;
+      input.dataset.valid = "1";
+      suggestBox.style.display = "none";
+      suggestBox.innerHTML = "";
+      showHint(false);
+      if (typeof onChangeValid === "function") onChangeValid();
+      input.focus();
+    } else {
+      // Только улица — подставляем и сразу запрашиваем дома
+      input.value = `г. Ульяновск, ${street}, `;
+      input.dataset.valid = "0";
+      suggestBox.style.display = "none";
+      suggestBox.innerHTML = "";
+      input.focus();
+      // Курсор в конец
+      const len = input.value.length;
+      input.setSelectionRange(len, len);
+      // Запускаем поиск домов — программный set не триггерит input event
+      input.dispatchEvent(new Event("input"));
     }
-
-    // можно вернуть фокус в input, если нужно:
-    input.focus();
   });
 
   input.addEventListener("blur", () => {
-    // просто спрячем подсказки чуть позже, чтобы не мешать mousedown
     setTimeout(() => {
       suggestBox.style.display = "none";
+      // Показываем предупреждение если что-то введено, но дом не выбран
+      if (input.value.trim() && input.dataset.valid !== "1") {
+        showHint(true);
+      }
     }, 150);
   });
 

@@ -2632,6 +2632,16 @@ tr.editing td {
   background: #f3f6ff;
 }
 
+.address-hint {
+  position: absolute;
+  top: -16px;
+  left: 0;
+  font-size: 12px;
+  color: #e05252;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .btn-disabled,
 .left-side__button:disabled {
   opacity: 0.6;
@@ -10249,3 +10259,8 @@ div.title-search-fader {
 /* /bitrix/components/niges/cookiesaccept/templates/.default/style.css?17476508102729 */
 /* /local/templates/ugd/styles.css?1747651399589 */
 /* /local/templates/ugd/template_styles.css?1724762985416 */
+.modal__social-vk {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}

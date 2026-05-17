@@ -12,6 +12,10 @@ interface UserRepositoryInterface
     public function delete(int $id): void;
     public function getAdminUsers(int $deleted = 0): array;
     public function updateAdminUser(int $id, array $data): void;
+    public function markPhoneVerified(int $id): void;
     public function getUserDistrictByAddress(string $street, string $house): ?array;
-
+    public function updateVkData(int $id, array $data): void;
+    public function updateVkMiddleName(int $id, string $middleName): void;
+    public function createFromVk(array $data): int;
+    public function findByVkId(string $vkId): ?array;
 }

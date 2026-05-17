@@ -5,15 +5,140 @@ namespace App\Service;
 
 final class FiasService
 {
-    private const TOKEN_URL = 'https://fias.nalog.ru/Home/GetSpasSettings';
-    private const HINT_URL  = 'https://fias-public-service.nalog.ru/api/spas/v2.0/GetAddressHint';
+    private const TOKEN_URL  = 'https://fias.nalog.ru/Home/GetSpasSettings';
+    private const HINT_URL   = 'https://fias-public-service.nalog.ru/api/spas/v2.0/GetAddressHint';
+    private const DADATA_URL = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
 
-    // Кеш токена (на шаред-хостинге лучше sys_get_temp_dir())
     private string $tokenCacheFile;
+    private string $dadataApiKey;
 
-    public function __construct(?string $tokenCacheFile = null)
+    public function __construct(?string $tokenCacheFile = null, string $dadataApiKey = '')
     {
         $this->tokenCacheFile = $tokenCacheFile ?: (sys_get_temp_dir() . '/fias_token_cache.json');
+        $this->dadataApiKey   = $dadataApiKey;
+    }
+
+    /**
+     * Один HTTP-запрос к DaData Suggestions API.
+     * Возвращает массив `suggestions` или [] при ошибке.
+     *
+     * @param array<string,mixed> $body
+     * @param string[]            $headers
+     * @return array<int,mixed>
+     */
+    private function dadataRequest(array $body, array $headers): array
+    {
+        $ch = curl_init(self::DADATA_URL);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($body, JSON_UNESCAPED_UNICODE),
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $resp     = curl_exec($ch);
+        $curlErr  = curl_error($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($resp === false || $curlErr !== '') {
+            error_log('[FiasService::dadataRequest] cURL error: ' . $curlErr);
+            return [];
+        }
+        if ($httpCode !== 200) {
+            error_log("[FiasService::dadataRequest] HTTP {$httpCode}: " . mb_substr((string)$resp, 0, 200));
+            return [];
+        }
+
+        $out = json_decode($resp, true);
+        return $out['suggestions'] ?? [];
+    }
+
+    /**
+     * Подсказки адресов через DaData (при наличии ключа) или локальную БД.
+     * Возвращает массив [{street, house, label, complete}].
+     *
+     * @return array<int, array{street:string, house:string, label:string, complete:bool}>
+     */
+    public function suggestAddress(string $query): array
+    {
+        $query = trim($query);
+        if (mb_strlen($query) < 2) {
+            return [];
+        }
+
+        if ($this->dadataApiKey === '') {
+            error_log('[FiasService::suggestAddress] DaData key not set');
+            return [];
+        }
+
+        $locations = [['region' => 'Ульяновская', 'city' => 'Ульяновск']];
+        $headers   = [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'Authorization: Token ' . $this->dadataApiKey,
+        ];
+
+        // Запрос 1: улицы → дома (обычные адреса)
+        $r1 = $this->dadataRequest([
+            'query'      => $query,
+            'count'      => 7,
+            'locations'  => $locations,
+            'from_bound' => ['value' => 'street'],
+            'to_bound'   => ['value' => 'house'],
+        ], $headers);
+
+        // Запрос 2: населённые пункты (СНТ и т.п.) → участки
+        $r2 = $this->dadataRequest([
+            'query'      => $query,
+            'count'      => 7,
+            'locations'  => $locations,
+            'from_bound' => ['value' => 'settlement'],
+            'to_bound'   => ['value' => 'stead'],
+        ], $headers);
+
+        $suggestions = array_merge($r1, $r2);
+
+        $result = [];
+        foreach ($suggestions as $s) {
+            $d = $s['data'] ?? [];
+
+            // Улица, либо СНТ/садовое общество (settlement)
+            $street = trim(
+                $d['street_with_type']
+                ?? $d['street']
+                ?? $d['settlement_with_type']
+                ?? $d['settlement']
+                ?? ''
+            );
+
+            // Дом или земельный участок
+            $house = trim($d['house'] ?? '');
+            if ($house === '') {
+                $steadType = trim($d['stead_type'] ?? 'уч');
+                $stead     = trim($d['stead'] ?? '');
+                if ($stead !== '') {
+                    $house = $steadType . ' ' . $stead;
+                }
+            }
+
+            if ($street === '') {
+                continue;
+            }
+
+            $label = $s['value'] ?? ($house ? "{$street}, {$house}" : $street);
+
+            $result[] = [
+                'street'   => $street,
+                'house'    => $house,
+                'label'    => $label,
+                'complete' => $house !== '',
+            ];
+        }
+
+        return $result;
     }
 
     /**

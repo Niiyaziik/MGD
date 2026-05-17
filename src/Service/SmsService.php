@@ -31,60 +31,90 @@ class SmsService
 
         $code = (string)random_int(100000, 999999);
         $ip   = $_SERVER['REMOTE_ADDR'] ?? null;
-
-        error_log("SmsService::sendCodeToPhone: creating code for phone {$phone}, ip={$ip}");
-
-        // Сохраняем код в БД (это главное - код должен быть доступен для проверки)
-        $this->phoneCodes->createCode($phone, $code, $ip);
-
         $text = "Код подтверждения: {$code}";
 
-        $apiId = '8390F4D8-4279-5F2E-6B35-607ADADD110D';
-        $from  = '';
+        $apiKey = 'CuFKaQOpUkF2FeGSlhwN7Q3FytceuuPXFBAEAd16OMLjpPr7XAH0YmDsvZXs';
+        $url    = 'https://new.smsgorod.ru/apiSms/create';
 
-        $params = [
-            'api_id' => $apiId,
-            'to'     => $phone,
-            'msg'    => $text,
-            'json'   => 1,
-            'from'   => $from,
-        ];
-
-        $query = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
-        $url   = 'https://sms.ru/sms/send?' . $query;
-
-        error_log("SmsService::sendCodeToPhone: request URL = {$url}");
-
-        // Пытаемся отправить SMS, но не блокируем процесс, если не получилось
-        $resp = @file_get_contents($url);
-        if ($resp === false) {
-            error_log("SmsService::sendCodeToPhone: sms.ru send error: no response for phone {$phone}, code {$code} (code saved in DB)");
-            // Код сохранен в БД, возвращаем успех, даже если SMS не отправилось
-            return ['ok' => true, 'sms_sent' => false];
+        if ($apiKey === '') {
+            return [
+                'ok'    => false,
+                'error' => 'Не настроен API-ключ SMS-сервиса.',
+            ];
         }
 
+        $payloadArray = [
+            'apiKey' => $apiKey,
+            'sms'    => [
+                [
+                    'channel' => 'char',
+                    'sender' => 'VIRTA',
+                    'text'    => $text,
+                    'phone'   => (string)$phone,
+                ],
+            ],
+        ];
+
+        $payload = json_encode($payloadArray, JSON_UNESCAPED_UNICODE);
+
+        error_log("SmsService::sendCodeToPhone: sending via smsgorod.ru to {$phone}");
+        error_log("SmsService::sendCodeToPhone: payload = " . $payload);
+
+        $ch = curl_init($url);
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($payload),
+            ],
+            CURLOPT_TIMEOUT        => 20,
+            CURLOPT_CONNECTTIMEOUT => 10,
+        ]);
+
+        $resp = curl_exec($ch);
+        $curlError = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        curl_close($ch);
+
+        error_log("SmsService::sendCodeToPhone: httpCode = " . $httpCode);
         error_log("SmsService::sendCodeToPhone: raw response = {$resp}");
+
+        if ($resp === false || $curlError) {
+            return [
+                'ok'    => false,
+                'error' => 'Не удалось отправить SMS. Попробуйте позже.',
+            ];
+        }
 
         $out = json_decode($resp, true);
 
-        if (!is_array($out) || ($out['status'] ?? '') !== 'OK') {
-            error_log("SmsService::sendCodeToPhone: sms.ru response error: {$resp} (code saved in DB)");
-            // Код сохранен в БД, возвращаем успех, даже если SMS не отправилось
-            return ['ok' => true, 'sms_sent' => false];
+        if (!is_array($out)) {
+            return [
+                'ok'    => false,
+                'error' => 'SMS-сервис вернул некорректный ответ.',
+            ];
         }
 
-        $smsInfo = $out['sms'][$phone] ?? null;
-        if (!is_array($smsInfo) || ($smsInfo['status'] ?? '') !== 'OK') {
-            error_log(
-                "SmsService::sendCodeToPhone: sms.ru number error for {$phone}: "
-                . json_encode($smsInfo, JSON_UNESCAPED_UNICODE)
-                . " (code saved in DB)"
-            );
-            // Код сохранен в БД, возвращаем успех, даже если SMS не отправилось
-            return ['ok' => true, 'sms_sent' => false];
+        if (($out['status'] ?? null) !== 'success') {
+            $errMsg = $out['data']['message']
+                ?? $out['message']
+                ?? $out['error']
+                ?? $resp;
+
+            error_log("SmsService::sendCodeToPhone: smsgorod.ru error for {$phone}: {$errMsg}");
+
+            return [
+                'ok'    => false,
+                'error' => 'Ошибка отправки SMS: ' . $errMsg,
+            ];
         }
 
-        error_log("SmsService::sendCodeToPhone: OK for {$phone}, SMS sent successfully");
+        $this->phoneCodes->createCode($phone, $code, $ip);
 
         return ['ok' => true, 'sms_sent' => true];
     }

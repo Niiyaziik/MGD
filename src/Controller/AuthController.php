@@ -53,14 +53,38 @@ class AuthController extends BaseController
         echo json_encode(['status' => 'ok']);
     }
 
+    public function vkConfig(): void
+    {
+        $this->requireMethod('GET');
+
+        $enabledRaw = getenv('VK_ID_ENABLED');
+        $enabled = $enabledRaw === false ? true : !in_array(strtolower((string)$enabledRaw), ['0', 'false', 'off', 'no'], true);
+
+        $appId = (int)(getenv('VK_ID_APP_ID') ?: 54388523);
+        $redirectUrl = getenv('VK_ID_REDIRECT_URL') ?: $this->buildAbsoluteUrl('/auth/vk/callback');
+        $scope = getenv('VK_ID_SCOPE') ?: 'phone email';
+
+        $this->json([
+            'ok'          => true,
+            'enabled'     => $enabled && $appId > 0,
+            'app'         => $appId,
+            'redirectUrl' => $redirectUrl,
+            'scope'       => $scope,
+        ]);
+    }
+
     public function vkRedirect(): void
     {
-        echo 'Тут будет редирект на VK OAuth';
+        header('Location: /');
     }
 
     public function vkCallback(): void
     {
-        echo 'VK callback – здесь логика получения профиля VK и создание/поиск user';
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>VK ID</title></head><body>';
+        echo '<p>Вход через VK ID обработан. Вернитесь на страницу голосования.</p>';
+        echo '<p><a href="/">На главную</a></p>';
+        echo '</body></html>';
     }
 
     public function logoutUser(): void
@@ -559,11 +583,265 @@ class AuthController extends BaseController
         $this->requireMethod('POST');
         $data = $this->getJsonBody();
 
-        // TODO: здесь через отдельный Auth-сервис (Auth.php) обрабатываешь $data,
-        // пока просто заглушка:
+        if (!$data) {
+            $this->json([
+                'ok' => false,
+                'error' => 'VK не передал данные авторизации',
+            ], 422);
+            return;
+        }
+
+        try {
+            $vkUser = $this->normalizeVkPayload($data);
+        } catch (\Throwable $e) {
+            error_log('VK normalize error: ' . $e->getMessage());
+            $this->json([
+                'ok' => false,
+                'error' => 'Не удалось обработать данные VK',
+            ], 422);
+            return;
+        }
+
+        if (empty($vkUser['vk_id'])) {
+            $this->json([
+                'ok' => false,
+                'error' => 'VK не передал идентификатор пользователя',
+            ], 422);
+            return;
+        }
+
+        $existingUser = $this->users->findByVkId((string)$vkUser['vk_id']);
+
+        if (!$existingUser && !empty($vkUser['phone'])) {
+            $existingUser = $this->users->findByPhone((string)$vkUser['phone']);
+        }
+
+        $saveData = [
+            'surname'        => $vkUser['last_name'] ?: null,
+            'name'           => $vkUser['first_name'] ?: null,
+            'patronymic'     => null,
+            'phone'          => $vkUser['phone'] ?: null,
+            'link_vk'        => $vkUser['vk_profile_url'],
+            'vk_id'          => $vkUser['vk_id'],
+            'vk_phone'       => $vkUser['phone'] ?: null,
+            'vk_email'       => $vkUser['email'] ?: null,
+            'vk_avatar'      => $vkUser['avatar'] ?: null,
+            'vk_profile_url' => $vkUser['vk_profile_url'],
+            'phone_verified' => 0,
+            'auth_method'    => 'ВК',
+        ];
+
+        if ($existingUser) {
+            $userId = (int)$existingUser['id'];
+            $this->users->updateVkData($userId, $saveData);
+        } else {
+            $userId = $this->users->createFromVk($saveData);
+        }
+
+        $_SESSION['vk_login'] = [
+            'user_id'        => $userId,
+            'vk_id'          => $vkUser['vk_id'],
+            'first_name'     => $vkUser['first_name'],
+            'last_name'      => $vkUser['last_name'],
+            'middle_name'    => null,
+            'phone'          => $vkUser['phone'],
+            'vk_phone'       => $vkUser['phone'],
+            'vk_email'       => $vkUser['email'],
+            'vk_avatar'      => $vkUser['avatar'],
+            'vk_profile_url' => $vkUser['vk_profile_url'],
+        ];
+
         $this->json([
-            'ok' => false,
-            'error' => 'vkOneTap пока не реализован',
-        ], 501);
+            'ok' => true,
+            'message' => 'VK ID успешно подключён. Введите отчество и продолжите авторизацию.',
+            'prefill' => [
+                'user_id'        => $userId,
+                'vk_id'          => $vkUser['vk_id'],
+                'first_name'     => $vkUser['first_name'],
+                'last_name'      => $vkUser['last_name'],
+                'phone'          => $vkUser['phone'],
+                'vk_profile_url' => $vkUser['vk_profile_url'],
+            ],
+        ]);
+    }
+
+    public function vkMiddleName(): void
+    {
+        $this->requireMethod('POST');
+        $data = $this->getJsonBody();
+
+        $vkLogin = $_SESSION['vk_login'] ?? null;
+        if (!$vkLogin || empty($vkLogin['user_id'])) {
+            $this->json([
+                'ok' => false,
+                'error' => 'Сначала выполните вход через VK',
+            ], 401);
+            return;
+        }
+
+        $middleName = trim((string)($data['middle_name'] ?? ''));
+        $middleName = preg_replace('/\s+/u', ' ', $middleName) ?? '';
+
+        if (!preg_match('/^[А-Яа-яЁё][А-Яа-яЁё\-\s]{1,99}$/u', $middleName)) {
+            $this->json([
+                'ok' => false,
+                'error' => 'Введите корректное отчество русскими буквами',
+            ], 422);
+            return;
+        }
+
+        $middleName = $this->capitalizeRussianName($middleName);
+
+        $this->users->updateVkMiddleName((int)$vkLogin['user_id'], $middleName);
+
+        $_SESSION['vk_login']['middle_name'] = $middleName;
+
+        $fullName = trim(($vkLogin['last_name'] ?? '') . ' ' . ($vkLogin['first_name'] ?? '') . ' ' . $middleName);
+
+        $this->json([
+            'ok' => true,
+            'prefill' => [
+                'fio' => $fullName,
+                'phone' => $vkLogin['phone'] ?? '',
+                'vk_profile_url' => $vkLogin['vk_profile_url'] ?? null,
+            ],
+        ]);
+    }
+
+    private function normalizeVkPayload(array $data): array
+    {
+        $claims = [];
+        if (!empty($data['id_token']) && is_string($data['id_token'])) {
+            $claims = $this->decodeJwtPayload($data['id_token']);
+        }
+
+        $sources = [];
+        foreach (['user', 'userinfo', 'user_info', 'userInfo', 'profile', 'payload'] as $key) {
+            if (!empty($data[$key]) && is_array($data[$key])) {
+                $sources[] = $data[$key];
+            }
+        }
+        $sources[] = $data;
+        if ($claims) {
+            $sources[] = $claims;
+        }
+
+        $vkId = $this->firstScalar($sources, ['vk_id', 'user_id', 'id', 'sub']);
+        $firstName = $this->firstScalar($sources, ['first_name', 'firstName', 'given_name', 'givenName']);
+        $lastName = $this->firstScalar($sources, ['last_name', 'lastName', 'family_name', 'familyName']);
+        $fullName = $this->firstScalar($sources, ['name', 'full_name', 'fullName']);
+
+        if ((!$firstName || !$lastName) && $fullName) {
+            $parts = preg_split('/\s+/u', trim($fullName));
+            if (!$firstName && isset($parts[1])) {
+                $firstName = $parts[1];
+            } elseif (!$firstName && isset($parts[0])) {
+                $firstName = $parts[0];
+            }
+            if (!$lastName && isset($parts[0])) {
+                $lastName = $parts[0];
+            }
+        }
+
+        $phoneRaw = $this->firstScalar($sources, ['phone', 'phone_number', 'phoneNumber', 'mobile_phone']);
+        $phone = $phoneRaw ? $this->normalizePhone((string)$phoneRaw) : null;
+
+        $email = $this->firstScalar($sources, ['email']);
+        $avatar = $this->firstScalar($sources, ['avatar', 'photo', 'picture', 'photo_200', 'photoMaxOrig']);
+
+        $vkId = $vkId ? preg_replace('/\D+/', '', (string)$vkId) : null;
+        $vkProfileUrl = $vkId ? 'https://vk.com/id' . $vkId : null;
+
+        return [
+            'vk_id'          => $vkId,
+            'first_name'     => $firstName ? $this->capitalizeRussianName((string)$firstName) : null,
+            'last_name'      => $lastName ? $this->capitalizeRussianName((string)$lastName) : null,
+            'phone'          => $phone,
+            'email'          => $email,
+            'avatar'         => $avatar,
+            'vk_profile_url' => $vkProfileUrl,
+        ];
+    }
+
+    private function firstScalar(array $sources, array $keys): ?string
+    {
+        foreach ($sources as $source) {
+            foreach ($keys as $key) {
+                if (isset($source[$key]) && is_scalar($source[$key]) && trim((string)$source[$key]) !== '') {
+                    return trim((string)$source[$key]);
+                }
+            }
+        }
+
+        foreach ($sources as $source) {
+            $found = $this->firstScalarRecursive($source, $keys);
+            if ($found !== null) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    private function firstScalarRecursive(array $source, array $keys): ?string
+    {
+        foreach ($source as $key => $value) {
+            if (in_array((string)$key, $keys, true) && is_scalar($value) && trim((string)$value) !== '') {
+                return trim((string)$value);
+            }
+
+            if (is_array($value)) {
+                $found = $this->firstScalarRecursive($value, $keys);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function decodeJwtPayload(string $jwt): array
+    {
+        $parts = explode('.', $jwt);
+        if (count($parts) < 2) {
+            return [];
+        }
+
+        $payload = strtr($parts[1], '-_', '+/');
+        $payload .= str_repeat('=', (4 - strlen($payload) % 4) % 4);
+        $json = base64_decode($payload, true);
+        if ($json === false) {
+            return [];
+        }
+
+        $data = json_decode($json, true);
+        return is_array($data) ? $data : [];
+    }
+
+    private function capitalizeRussianName(string $value): string
+    {
+        $value = trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+        $parts = preg_split('/([\s\-]+)/u', $value, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!$parts) {
+            return $value;
+        }
+
+        foreach ($parts as $i => $part) {
+            if (preg_match('/^[А-Яа-яЁё]+$/u', $part)) {
+                $parts[$i] = mb_strtoupper(mb_substr($part, 0, 1, 'UTF-8'), 'UTF-8') .
+                    mb_strtolower(mb_substr($part, 1, null, 'UTF-8'), 'UTF-8');
+            }
+        }
+
+        return implode('', $parts);
+    }
+
+    private function buildAbsoluteUrl(string $path): string
+    {
+        $proto = $_SERVER['HTTP_X_FORWARDED_PROTO']
+            ?? (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (int)($_SERVER['SERVER_PORT'] ?? 80) === 443) ? 'https' : 'http');
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return $proto . '://' . $host . $path;
     }
 }

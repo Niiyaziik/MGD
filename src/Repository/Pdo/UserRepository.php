@@ -53,22 +53,32 @@ class UserRepository implements UserRepositoryInterface
     public function create(array $data): int
     {
         $st = $this->pdo->prepare("
-            INSERT INTO users (surname, name, patronymic, phone, link_vk,
-                            district_id, street_id, house_id, auth_method, created_at)
-            VALUES (:surname, :name, :patronymic, :phone, :link_vk,
-                    :district_id, :street_id, :house_id, :auth_method, NOW())
+            INSERT INTO users (
+                surname, name, patronymic, phone, link_vk,
+                vk_id, vk_phone, vk_email, vk_avatar, vk_profile_url,
+                district_id, street_id, house_id, auth_method, created_at
+            ) VALUES (
+                :surname, :name, :patronymic, :phone, :link_vk,
+                :vk_id, :vk_phone, :vk_email, :vk_avatar, :vk_profile_url,
+                :district_id, :street_id, :house_id, :auth_method, NOW()
+            )
         ");
 
         $st->execute([
-            ':surname'     => $data['surname']     ?? null,
-            ':name'        => $data['name']        ?? null,
-            ':patronymic'  => $data['patronymic']  ?? null,
-            ':phone'       => $data['phone']       ?? null,
-            ':link_vk'     => $data['link_vk']     ?? null,
-            ':district_id' => $data['district_id'] ?? null,
-            ':street_id'   => $data['street_id']   ?? null,
-            ':house_id'    => $data['house_id']    ?? null,
-            ':auth_method' => $data['auth_method'] ?? null,
+            ':surname'        => $data['surname']        ?? null,
+            ':name'           => $data['name']           ?? null,
+            ':patronymic'     => $data['patronymic']     ?? null,
+            ':phone'          => $data['phone']          ?? null,
+            ':link_vk'        => $data['link_vk']        ?? null,
+            ':vk_id'          => $data['vk_id']          ?? null,
+            ':vk_phone'       => $data['vk_phone']       ?? null,
+            ':vk_email'       => $data['vk_email']       ?? null,
+            ':vk_avatar'      => $data['vk_avatar']      ?? null,
+            ':vk_profile_url' => $data['vk_profile_url'] ?? null,
+            ':district_id'    => $data['district_id']    ?? null,
+            ':street_id'      => $data['street_id']      ?? null,
+            ':house_id'       => $data['house_id']       ?? null,
+            ':auth_method'    => $data['auth_method']    ?? null,
         ]);
 
         return (int)$this->pdo->lastInsertId();
@@ -201,23 +211,148 @@ class UserRepository implements UserRepositoryInterface
     {
         $st = $this->pdo->prepare("
             UPDATE users SET
-                surname     = :surname,
-                name        = :name,
-                patronymic  = :patronymic,
-                district_id = :district_id,
-                street_id   = :street_id,
-                house_id    = :house_id
+                surname        = :surname,
+                name           = :name,
+                patronymic     = :patronymic,
+                phone          = COALESCE(:phone, phone),
+                link_vk        = COALESCE(:link_vk, link_vk),
+                vk_id          = COALESCE(:vk_id, vk_id),
+                vk_phone       = COALESCE(:vk_phone, vk_phone),
+                vk_email       = COALESCE(:vk_email, vk_email),
+                vk_avatar      = COALESCE(:vk_avatar, vk_avatar),
+                vk_profile_url = COALESCE(:vk_profile_url, vk_profile_url),
+                auth_method    = COALESCE(:auth_method, auth_method),
+                district_id    = :district_id,
+                street_id      = :street_id,
+                house_id       = :house_id,
+                updated_at     = NOW()
             WHERE id = :id
+              AND deleted_at IS NULL
         ");
 
         $st->execute([
-            ':surname'     => $data['surname']     ?? null,
-            ':name'        => $data['name']        ?? null,
-            ':patronymic'  => $data['patronymic']  ?? null,
-            ':district_id' => $data['district_id'] ?? null,
-            ':street_id'   => $data['street_id']   ?? null,
-            ':house_id'    => $data['house_id']    ?? null,
-            ':id'          => $id,
+            ':surname'        => $data['surname']        ?? null,
+            ':name'           => $data['name']           ?? null,
+            ':patronymic'     => $data['patronymic']     ?? null,
+            ':phone'          => $data['phone']          ?? null,
+            ':link_vk'        => $data['link_vk']        ?? null,
+            ':vk_id'          => $data['vk_id']          ?? null,
+            ':vk_phone'       => $data['vk_phone']       ?? null,
+            ':vk_email'       => $data['vk_email']       ?? null,
+            ':vk_avatar'      => $data['vk_avatar']      ?? null,
+            ':vk_profile_url' => $data['vk_profile_url'] ?? null,
+            ':auth_method'    => $data['auth_method']    ?? null,
+            ':district_id'    => $data['district_id']    ?? null,
+            ':street_id'      => $data['street_id']      ?? null,
+            ':house_id'       => $data['house_id']       ?? null,
+            ':id'             => $id,
         ]);
+    }
+    public function findByVkId(string $vkId): ?array
+    {
+        $st = $this->pdo->prepare("
+            SELECT *
+            FROM users
+            WHERE vk_id = :vk_id
+              AND deleted_at IS NULL
+            LIMIT 1
+        ");
+        $st->execute([':vk_id' => $vkId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function createFromVk(array $data): int
+    {
+        $st = $this->pdo->prepare("
+            INSERT INTO users (
+                surname, name, patronymic, phone, link_vk,
+                vk_id, vk_phone, vk_email, vk_avatar, vk_profile_url,
+                phone_verified, auth_method, created_at
+            ) VALUES (
+                :surname, :name, :patronymic, :phone, :link_vk,
+                :vk_id, :vk_phone, :vk_email, :vk_avatar, :vk_profile_url,
+                :phone_verified, :auth_method, NOW()
+            )
+        ");
+
+        $st->execute([
+            ':surname'          => $data['surname']          ?? null,
+            ':name'             => $data['name']             ?? null,
+            ':patronymic'       => $data['patronymic']       ?? null,
+            ':phone'            => $data['phone']            ?? null,
+            ':link_vk'          => $data['link_vk']          ?? null,
+            ':vk_id'            => $data['vk_id']            ?? null,
+            ':vk_phone'         => $data['vk_phone']         ?? null,
+            ':vk_email'         => $data['vk_email']         ?? null,
+            ':vk_avatar'        => $data['vk_avatar']        ?? null,
+            ':vk_profile_url'   => $data['vk_profile_url']   ?? null,
+            ':phone_verified'   => $data['phone_verified']   ?? 0,
+            ':auth_method'      => $data['auth_method']      ?? 'ВК',
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+    public function updateVkData(int $id, array $data): void
+    {
+        $st = $this->pdo->prepare("
+            UPDATE users SET
+                surname        = COALESCE(:surname, surname),
+                name           = COALESCE(:name, name),
+                phone          = COALESCE(:phone, phone),
+                link_vk        = COALESCE(:link_vk, link_vk),
+                vk_id          = COALESCE(:vk_id, vk_id),
+                vk_phone       = COALESCE(:vk_phone, vk_phone),
+                vk_email       = COALESCE(:vk_email, vk_email),
+                vk_avatar      = COALESCE(:vk_avatar, vk_avatar),
+                vk_profile_url = COALESCE(:vk_profile_url, vk_profile_url),
+                phone_verified = COALESCE(:phone_verified, phone_verified),
+                auth_method    = 'ВК',
+                updated_at     = NOW()
+            WHERE id = :id
+              AND deleted_at IS NULL
+        ");
+
+        $st->execute([
+            ':surname'        => $data['surname']        ?? null,
+            ':name'           => $data['name']           ?? null,
+            ':phone'          => $data['phone']          ?? null,
+            ':link_vk'        => $data['link_vk']        ?? null,
+            ':vk_id'          => $data['vk_id']          ?? null,
+            ':vk_phone'       => $data['vk_phone']       ?? null,
+            ':vk_email'       => $data['vk_email']       ?? null,
+            ':vk_avatar'      => $data['vk_avatar']      ?? null,
+            ':vk_profile_url' => $data['vk_profile_url'] ?? null,
+            ':phone_verified' => $data['phone_verified'] ?? null,
+            ':id'             => $id,
+        ]);
+    }
+
+    public function updateVkMiddleName(int $id, string $middleName): void
+    {
+        $st = $this->pdo->prepare("
+            UPDATE users SET
+                patronymic = :patronymic,
+                updated_at = NOW()
+            WHERE id = :id
+              AND deleted_at IS NULL
+        ");
+
+        $st->execute([
+            ':patronymic' => $middleName,
+            ':id'         => $id,
+        ]);
+    }
+    public function markPhoneVerified(int $id): void
+    {
+        $st = $this->pdo->prepare("
+            UPDATE users SET
+                phone_verified = 1,
+                updated_at = NOW()
+            WHERE id = :id
+              AND deleted_at IS NULL
+        ");
+
+        $st->execute([':id' => $id]);
     }
 }

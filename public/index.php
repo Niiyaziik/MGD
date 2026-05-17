@@ -191,7 +191,9 @@ $router->get('/auth/status', [\App\Controller\AuthController::class, 'status']);
 $router->post('/auth/precheck', [\App\Controller\AuthController::class, 'precheck']);
 
 // VK OAuth (упрощённо, только структура)
+$router->get('/auth/vk/config', [AuthController::class, 'vkConfig']);
 $router->post('/auth/vk/onetap', [AuthController::class, 'vkOneTap']);
+$router->post('/auth/vk/middle-name', [AuthController::class, 'vkMiddleName']);
 $router->get('/auth/vk', [\App\Controller\AuthController::class, 'vkRedirect']);
 $router->get('/auth/vk/callback', [\App\Controller\AuthController::class, 'vkCallback']);
 $router->post('/auth/send-code',  [\App\Controller\AuthController::class, 'sendCode']);

@@ -39,6 +39,13 @@ $_ENV['DB_DSN']  = 'mysql:host=localhost;port=3306;dbname=mgd;charset=utf8mb4';
 $_ENV['DB_USER'] = 'root';
 $_ENV['DB_PASS'] = 'pass';
 
+$_ENV['DADATA_API_KEY'] = 'de47c1e4b77827103eb1a215450b6f6b66d7bf9e';
+
+$_ENV['VK_ID_ENABLED']=1;
+$_ENV['VK_ID_APP_ID']=54388523;
+$_ENV['VK_ID_REDIRECT_URL']='http://localhost/auth/vk/callback';
+$_ENV['VK_ID_SCOPE']='phone';
+
 Database::init($_ENV['DB_DSN'], $_ENV['DB_USER'], $_ENV['DB_PASS']);
 
 function runMigrations(PDO $pdo): void
@@ -184,7 +191,8 @@ $container->set(
     DistrictController::class,
     fn($c) => new DistrictController(
         $c->get(DistrictRepositoryInterface::class),
-        $c
+        $c,
+        $c->get(\App\Service\FiasService::class)
     )
 );
 
@@ -248,7 +256,10 @@ $container->set(AdminService::class, fn($c) => new AdminService(
     $c->get(AdminRepositoryInterface::class),
 ));
 
-$container->set(\App\Service\FiasService::class, fn($c) => new \App\Service\FiasService());
+$container->set(\App\Service\FiasService::class, fn($c) => new \App\Service\FiasService(
+    null,
+    $_ENV['DADATA_API_KEY'] ?? ''
+));
 
 $container->set(AdminMiddleware::class,
     fn($c) => new AdminMiddleware(

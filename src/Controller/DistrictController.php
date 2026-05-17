@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Model\District;
 use App\Repository\Contract\DistrictRepositoryInterface;
+use App\Service\FiasService;
 use DomainException;
 use Throwable;
 
@@ -10,7 +11,8 @@ class DistrictController extends BaseController
 {
     public function __construct(
         private DistrictRepositoryInterface $districts,
-        private ?object $container = null
+        private ?object $container = null,
+        private ?FiasService $fiasService = null,
     ) {}
 
     public function index(): void
@@ -334,20 +336,23 @@ class DistrictController extends BaseController
     {
         $this->requireMethod('GET');
 
-        $query = (string)($_GET['query'] ?? '');
-        $query = trim($query);
+        $query = trim((string)($_GET['query'] ?? ''));
 
-        if ($query === '') {
+        if (mb_strlen($query) < 2) {
             $this->json([]);
             return;
         }
 
-        // Используем подсказки из базы данных
+        if ($this->fiasService !== null) {
+            $this->json($this->fiasService->suggestAddress($query));
+            return;
+        }
+
+        // Fallback: подсказки из локальной БД
         try {
-            $list = $this->districts->suggest($query);
-            $this->json($list);
+            $this->json($this->districts->suggest($query));
         } catch (\Throwable $e) {
-            error_log('[DistrictController::suggest] DB error: ' . $e->getMessage());
+            error_log('[DistrictController::suggest] DB fallback error: ' . $e->getMessage());
             $this->json([]);
         }
     }
