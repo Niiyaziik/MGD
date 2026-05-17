@@ -7,9 +7,27 @@
             "App\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "scripts": {
         "migrate": "php -r \"require __DIR__ . '/bootstrap.php';\"",
-        "db:fresh": "php database/fresh.php"
+        "db:fresh": "php database/fresh.php",
+        "test": [
+            "vendor/bin/phpunit",
+            "@php -r \"$t=file_get_contents('coverage-report/coverage-summary.txt');if(preg_match('/Lines:[^\\n]+/',$t,$m)){echo trim($m[0]).PHP_EOL;}\""
+        ],
+        "test:unit": [
+            "vendor/bin/phpunit --testsuite \"Unit tests\" --no-coverage"
+        ],
+        "test:integration": [
+            "vendor/bin/phpunit --testsuite \"Integration tests\" --no-coverage"
+        ],
+        "test:functional": [
+            "vendor/bin/phpunit --testsuite \"Functional tests\" --no-coverage"
+        ]
     },
     "authors": [
         {
@@ -21,6 +39,8 @@
     "require": {
         "phpoffice/phpspreadsheet": "^5.3",
         "mpdf/mpdf": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "12"
     }
-    
 }

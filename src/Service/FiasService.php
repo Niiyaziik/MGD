@@ -176,14 +176,14 @@ final class FiasService
         // - массивом объектов
         // - объектом вида { "addresses": [...] } или { "result": [...] }
         $items = [];
-        if (is_array($data)) {
-            $items = $data;
-        } elseif (is_array($data['addresses'] ?? null)) {
+        if (is_array($data['addresses'] ?? null)) {
             $items = $data['addresses'];
         } elseif (is_array($data['result'] ?? null)) {
             $items = $data['result'];
         } elseif (is_array($data['data'] ?? null)) {
             $items = $data['data'];
+        } elseif (is_array($data) && isset($data[0])) {
+            $items = $data;
         }
 
         $out = [];
@@ -382,9 +382,9 @@ final class FiasService
         $street = $address;
         $house  = '';
 
-        if (preg_match('/,?\s*(?:д\.?|дом|строение|корп\.?|корпус)\s*([^,]+)/iu', $address, $m)) {
+        if (preg_match('/,?\s*(?:дом|строение|корпус|корп\.?|д\.?)\s*([^,]+)/iu', $address, $m)) {
             $house  = trim($m[1]);
-            $street = preg_replace('/,?\s*(?:д\.?|дом|строение|корп\.?|корпус)\s*[^,]+/iu', '', $address);
+            $street = preg_replace('/,?\s*(?:дом|строение|корпус|корп\.?|д\.?)\s*[^,]+/iu', '', $address);
         }
 
         $street = trim($street);

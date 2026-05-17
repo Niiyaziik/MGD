@@ -1,10 +1,10 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Service;
 
 use App\Repository\Contract\UserRepositoryInterface;
 use App\Repository\Contract\DistrictRepositoryInterface;
-use App\Model\User;
 use DomainException;
 use PDO;
 use RuntimeException;
@@ -17,80 +17,135 @@ class UserService
         private DistrictRepositoryInterface $districts,
     ) {}
 
-    public function register(array $data): User
+    /**
+     * Регистрирует пользователя и возвращает данные созданной записи.
+     * Метод работает через интерфейс UserRepositoryInterface: create(array): int.
+     */
+    public function register(array $data): array
     {
-        if (empty($data['surname']) || empty($data['name'])) {
+        $surname = trim((string)($data['surname'] ?? ''));
+        $name = trim((string)($data['name'] ?? ''));
+        $phone = trim((string)($data['phone'] ?? ''));
+        $vkId = trim((string)($data['vk_id'] ?? ''));
+
+        if ($surname === '' || $name === '') {
             throw new DomainException('Имя и фамилия обязательны');
         }
-        if (empty($data['phone']) && empty($data['vk_id'])) {
+        if ($phone === '' && $vkId === '') {
             throw new DomainException('Нужен хотя бы один идентификатор: телефон или VK');
         }
         if (!isset($data['district_id'])) {
             throw new DomainException('Не указан округ');
         }
-        if (!$this->districts->findById((int)$data['district_id'])) {
+
+        $districtId = (int)$data['district_id'];
+        if (!$this->districtExists($districtId)) {
             throw new DomainException('Округ не найден');
         }
 
-        if (!empty($data['phone']) && $this->users->findByPhone($data['phone'])) {
+        if ($phone !== '' && $this->users->findByPhone($phone)) {
             throw new DomainException('Телефон уже используется');
         }
-        if (!empty($data['vk_id']) && $this->users->findByVkId($data['vk_id'])) {
+        if ($vkId !== '' && $this->users->findByVkId($vkId)) {
             throw new DomainException('VK ID уже используется');
         }
 
-        $user = new User();
-        $user->surname = $data['surname'];
-        $user->name = $data['name'];
-        $user->patronymic = $data['patronymic'] ?? null;
-        $user->phone = $data['phone'] ?? '';
-        $user->vk_id = $data['vk_id'] ?? '';
-        $user->district_id = (int)$data['district_id'];
-        $user->auth_method = $data['auth_method'] ?? 'Телефон';
+        $clean = [
+            'surname'     => $surname,
+            'name'        => $name,
+            'patronymic'  => trim((string)($data['patronymic'] ?? '')) ?: null,
+            'phone'       => $phone,
+            'vk_id'       => $vkId,
+            'district_id' => $districtId,
+            'auth_method' => $data['auth_method'] ?? 'Телефон',
+        ];
 
         try {
             $this->pdo->beginTransaction();
-            $created = $this->users->create($user);
+            $id = $this->users->create($clean);
             $this->pdo->commit();
-            return $created;
+
+            $created = $this->safeFindUser($id);
+            return $created ?: (['id' => $id] + $clean);
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
             throw new RuntimeException('Не удалось создать пользователя', 0, $e);
         }
     }
 
-    public function update(int $id, array $patch): User
+    /**
+     * Обновляет пользователя и возвращает актуальные данные.
+     */
+    public function update(int $id, array $patch): array
     {
-        $user = $this->users->findById($id);
-        if (!$user) throw new DomainException('Пользователь не найден');
+        $user = $this->safeFindUser($id);
+        if (!$user) {
+            throw new DomainException('Пользователь не найден');
+        }
+
+        $clean = [];
 
         if (array_key_exists('district_id', $patch)) {
             $districtId = (int)$patch['district_id'];
-            if ($districtId && !$this->districts->findById($districtId)) {
+            if ($districtId && !$this->districtExists($districtId)) {
                 throw new DomainException('Округ не найден');
             }
-            $user->district_id = $districtId;
+            $clean['district_id'] = $districtId;
         }
 
-        if (array_key_exists('phone', $patch) && $patch['phone'] !== $user->phone) {
-            if ($patch['phone'] && $this->users->findByPhone($patch['phone'])) {
-                throw new DomainException('Телефон уже используется');
+        if (array_key_exists('phone', $patch)) {
+            $phone = trim((string)$patch['phone']);
+            if ($phone !== (string)($user['phone'] ?? '')) {
+                $existing = $phone !== '' ? $this->users->findByPhone($phone) : null;
+                if ($existing && (int)($existing['id'] ?? 0) !== $id) {
+                    throw new DomainException('Телефон уже используется');
+                }
             }
-            $user->phone = (string)$patch['phone'];
+            $clean['phone'] = $phone;
         }
 
-        if (array_key_exists('vk_id', $patch) && $patch['vk_id'] !== $user->vk_id) {
-            if ($patch['vk_id'] && $this->users->findByVkId($patch['vk_id'])) {
-                throw new DomainException('VK ID уже используется');
+        if (array_key_exists('vk_id', $patch)) {
+            $vkId = trim((string)$patch['vk_id']);
+            if ($vkId !== (string)($user['vk_id'] ?? '')) {
+                $existing = $vkId !== '' ? $this->users->findByVkId($vkId) : null;
+                if ($existing && (int)($existing['id'] ?? 0) !== $id) {
+                    throw new DomainException('VK ID уже используется');
+                }
             }
-            $user->vk_id = (string)$patch['vk_id'];
+            $clean['vk_id'] = $vkId;
         }
 
-        $user->surname = $patch['surname'] ?? $user->surname;
-        $user->name    = $patch['name'] ?? $user->name;
-        $user->patronymic = $patch['patronymic'] ?? $user->patronymic;
-        $user->auth_method = $patch['auth_method'] ?? $user->auth_method;
+        foreach (['surname', 'name', 'patronymic', 'auth_method'] as $field) {
+            if (array_key_exists($field, $patch)) {
+                $value = is_string($patch[$field]) ? trim($patch[$field]) : $patch[$field];
+                $clean[$field] = $value === '' ? null : $value;
+            }
+        }
 
-        return $this->users->update($user);
+        if ($clean !== []) {
+            $this->users->update($id, $clean);
+        }
+
+        $fresh = $this->safeFindUser($id);
+        return $fresh ?: array_merge($user, $clean);
     }
+
+    private function safeFindUser(int $id): array
+    {
+        try {
+            return $this->users->find($id);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function districtExists(int $districtId): bool
+    {
+        try {
+            return (bool)$this->districts->find($districtId);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
 }

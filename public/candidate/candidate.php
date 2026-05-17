@@ -50,7 +50,7 @@
 
 
         <title>
-            Новости Ульяновской Городской Думы    </title>
+            Кандидат {fio} молодёжной думы    </title>
         <!-- Yandex.Metrika counter -->
         <script type="text/javascript">
         (function(m, e, t, r, i, k, a) {

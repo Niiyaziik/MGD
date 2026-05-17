@@ -8,6 +8,26 @@ class VoteRepository implements VoteRepositoryInterface
 {
     public function __construct(private PDO $pdo) {}
 
+    public function findByUserId(int $userId): ?array
+    {
+        $st = $this->pdo->prepare(
+            "SELECT * FROM votes WHERE user_id = ? AND deleted_at IS NULL LIMIT 1"
+        );
+        $st->execute([$userId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function create(object $vote): object
+    {
+        $st = $this->pdo->prepare(
+            "INSERT INTO votes (user_id, candidate_id) VALUES (?, ?)"
+        );
+        $st->execute([$vote->user_id, $vote->candidate_id]);
+        $vote->id = (int)$this->pdo->lastInsertId();
+        return $vote;
+    }
+
     public function userHasVote(int $userId): bool
     {
         $st = $this->pdo->prepare("SELECT 1 FROM votes WHERE user_id=? AND deleted_at IS NULL LIMIT 1");

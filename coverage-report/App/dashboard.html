@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for D:\Учёба\MGD\MGD\src\App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../_css/bootstrap.min.css?v=12.5.6" rel="stylesheet" type="text/css">
+  <link href="../_css/billboard.min.css?v=12.5.6" rel="stylesheet" type="text/css">
+  <link href="../_css/style.css?v=12.5.6" rel="stylesheet" type="text/css">
+  <link href="../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../index.html">D:\Учёба\MGD\MGD\src</a></li>
+         <li class="breadcrumb-item"><a href="index.html">App</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classesCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3 style="margin-top: 2rem;">Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Container.php.html#12">App\App\Container</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Database.php.html#7">App\App\Database</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#10">App\App\LoggedPDO</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#64">App\App\LoggedPDOStatement</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#6">App\App\RouteDefinition</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#29">App\App\Router</a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3 style="margin-top: 2rem;">Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+         <th class="text-right">Complexity</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="LoggedPDO.php.html#64">App\App\LoggedPDOStatement</a></td><td class="text-right">0.0%</td><td class="text-right">18</td><td class="text-right">342</td></tr>
+       <tr><td><a href="Router.php.html#29">App\App\Router</a></td><td class="text-right">0.0%</td><td class="text-right">17</td><td class="text-right">306</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#10">App\App\LoggedPDO</a></td><td class="text-right">0.0%</td><td class="text-right">8</td><td class="text-right">72</td></tr>
+       <tr><td><a href="Container.php.html#12">App\App\Container</a></td><td class="text-right">0.0%</td><td class="text-right">7</td><td class="text-right">56</td></tr>
+       <tr><td><a href="Database.php.html#7">App\App\Database</a></td><td class="text-right">0.0%</td><td class="text-right">6</td><td class="text-right">42</td></tr>
+       <tr><td><a href="Router.php.html#6">App\App\RouteDefinition</a></td><td class="text-right">0.0%</td><td class="text-right">5</td><td class="text-right">30</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2 style="margin-top: 3rem;">Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodsCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3 style="margin-top: 2rem;">Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Container.php.html#24"><abbr title="App\App\Container::set">set</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Container.php.html#29"><abbr title="App\App\Container::has">has</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Container.php.html#39"><abbr title="App\App\Container::get">get</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Database.php.html#11"><abbr title="App\App\Database::init">init</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Database.php.html#29"><abbr title="App\App\Database::pdo">pdo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Database.php.html#34"><abbr title="App\App\Database::tx">tx</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#14"><abbr title="App\App\LoggedPDO::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#20"><abbr title="App\App\LoggedPDO::log">log</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#39"><abbr title="App\App\LoggedPDO::query">query</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#45"><abbr title="App\App\LoggedPDO::prepare">prepare</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#54"><abbr title="App\App\LoggedPDO::exec">exec</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#70"><abbr title="App\App\LoggedPDOStatement::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#77"><abbr title="App\App\LoggedPDOStatement::execute">execute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#86"><abbr title="App\App\LoggedPDOStatement::log">log</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#106"><abbr title="App\App\LoggedPDOStatement::__call">__call</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#112"><abbr title="App\App\LoggedPDOStatement::__get">__get</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#117"><abbr title="App\App\LoggedPDOStatement::__set">__set</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#122"><abbr title="App\App\LoggedPDOStatement::fetchAll">fetchAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#129"><abbr title="App\App\LoggedPDOStatement::fetch">fetch</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#136"><abbr title="App\App\LoggedPDOStatement::logResult">logResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#149"><abbr title="App\App\LoggedPDOStatement::bindValue">bindValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#154"><abbr title="App\App\LoggedPDOStatement::bindParam">bindParam</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#159"><abbr title="App\App\LoggedPDOStatement::rowCount">rowCount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#164"><abbr title="App\App\LoggedPDOStatement::columnCount">columnCount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#169"><abbr title="App\App\LoggedPDOStatement::errorCode">errorCode</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#174"><abbr title="App\App\LoggedPDOStatement::errorInfo">errorInfo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#10"><abbr title="App\App\RouteDefinition::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#15"><abbr title="App\App\RouteDefinition::middleware">middleware</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#38"><abbr title="App\App\Router::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#42"><abbr title="App\App\Router::get">get</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#47"><abbr title="App\App\Router::post">post</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#52"><abbr title="App\App\Router::put">put</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#57"><abbr title="App\App\Router::delete">delete</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#62"><abbr title="App\App\Router::add">add</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#86"><abbr title="App\App\Router::dispatch">dispatch</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#113"><abbr title="App\App\Router::runMiddlewares">runMiddlewares</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Router.php.html#126"><abbr title="App\App\Router::invoke">invoke</abbr></a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3 style="margin-top: 2rem;">Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+         <th class="text-right">Complexity</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Router.php.html#86"><abbr title="App\App\Router::dispatch">dispatch</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">5</td><td class="text-right">30</td></tr>
+       <tr><td><a href="Container.php.html#39"><abbr title="App\App\Container::get">get</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">4</td><td class="text-right">20</td></tr>
+       <tr><td><a href="Router.php.html#15"><abbr title="App\App\RouteDefinition::middleware">middleware</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">4</td><td class="text-right">20</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#20"><abbr title="App\App\LoggedPDO::log">log</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">3</td><td class="text-right">12</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#86"><abbr title="App\App\LoggedPDOStatement::log">log</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">3</td><td class="text-right">12</td></tr>
+       <tr><td><a href="Router.php.html#113"><abbr title="App\App\Router::runMiddlewares">runMiddlewares</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">3</td><td class="text-right">12</td></tr>
+       <tr><td><a href="Container.php.html#29"><abbr title="App\App\Container::has">has</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="Database.php.html#11"><abbr title="App\App\Database::init">init</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="Database.php.html#29"><abbr title="App\App\Database::pdo">pdo</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="Database.php.html#34"><abbr title="App\App\Database::tx">tx</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#45"><abbr title="App\App\LoggedPDO::prepare">prepare</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="LoggedPDO.php.html#129"><abbr title="App\App\LoggedPDOStatement::fetch">fetch</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="Router.php.html#62"><abbr title="App\App\Router::add">add</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+       <tr><td><a href="Router.php.html#126"><abbr title="App\App\Router::invoke">invoke</abbr></a></td><td class="text-right">0.0%</td><td class="text-right">2</td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 12.5.6</a> using <a href="https://www.php.net/" target="_top">PHP 8.4.13</a> and <a href="https://phpunit.de/">PHPUnit 12.0.0</a> at Sun May 17 15:45:24 UTC 2026.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../_js/billboard.pkgd.min.js?v=12.5.6" type="text/javascript"></script>
+  <script type="application/json" id="complexity_class">[[0,7,"Container.php.html#12","App\\App\\Container","56"],[0,6,"Database.php.html#7","App\\App\\Database","42"],[0,8,"LoggedPDO.php.html#10","App\\App\\LoggedPDO","72"],[0,18,"LoggedPDO.php.html#64","App\\App\\LoggedPDOStatement","342"],[0,5,"Router.php.html#6","App\\App\\RouteDefinition","30"],[0,17,"Router.php.html#29","App\\App\\Router","306"]]</script>
+  <script type="application/json" id="complexity_method">[[0,1,"Container.php.html#24","App\\App\\Container::set","2"],[0,2,"Container.php.html#29","App\\App\\Container::has","6"],[0,4,"Container.php.html#39","App\\App\\Container::get","20"],[0,2,"Database.php.html#11","App\\App\\Database::init","6"],[0,2,"Database.php.html#29","App\\App\\Database::pdo","6"],[0,2,"Database.php.html#34","App\\App\\Database::tx","6"],[0,1,"LoggedPDO.php.html#14","App\\App\\LoggedPDO::__construct","2"],[0,3,"LoggedPDO.php.html#20","App\\App\\LoggedPDO::log","12"],[0,1,"LoggedPDO.php.html#39","App\\App\\LoggedPDO::query","2"],[0,2,"LoggedPDO.php.html#45","App\\App\\LoggedPDO::prepare","6"],[0,1,"LoggedPDO.php.html#54","App\\App\\LoggedPDO::exec","2"],[0,1,"LoggedPDO.php.html#70","App\\App\\LoggedPDOStatement::__construct","2"],[0,1,"LoggedPDO.php.html#77","App\\App\\LoggedPDOStatement::execute","2"],[0,3,"LoggedPDO.php.html#86","App\\App\\LoggedPDOStatement::log","12"],[0,1,"LoggedPDO.php.html#106","App\\App\\LoggedPDOStatement::__call","2"],[0,1,"LoggedPDO.php.html#112","App\\App\\LoggedPDOStatement::__get","2"],[0,1,"LoggedPDO.php.html#117","App\\App\\LoggedPDOStatement::__set","2"],[0,1,"LoggedPDO.php.html#122","App\\App\\LoggedPDOStatement::fetchAll","2"],[0,2,"LoggedPDO.php.html#129","App\\App\\LoggedPDOStatement::fetch","6"],[0,1,"LoggedPDO.php.html#136","App\\App\\LoggedPDOStatement::logResult","2"],[0,1,"LoggedPDO.php.html#149","App\\App\\LoggedPDOStatement::bindValue","2"],[0,1,"LoggedPDO.php.html#154","App\\App\\LoggedPDOStatement::bindParam","2"],[0,1,"LoggedPDO.php.html#159","App\\App\\LoggedPDOStatement::rowCount","2"],[0,1,"LoggedPDO.php.html#164","App\\App\\LoggedPDOStatement::columnCount","2"],[0,1,"LoggedPDO.php.html#169","App\\App\\LoggedPDOStatement::errorCode","2"],[0,1,"LoggedPDO.php.html#174","App\\App\\LoggedPDOStatement::errorInfo","2"],[0,1,"Router.php.html#10","App\\App\\RouteDefinition::__construct","2"],[0,4,"Router.php.html#15","App\\App\\RouteDefinition::middleware","20"],[0,1,"Router.php.html#38","App\\App\\Router::__construct","2"],[0,1,"Router.php.html#42","App\\App\\Router::get","2"],[0,1,"Router.php.html#47","App\\App\\Router::post","2"],[0,1,"Router.php.html#52","App\\App\\Router::put","2"],[0,1,"Router.php.html#57","App\\App\\Router::delete","2"],[0,2,"Router.php.html#62","App\\App\\Router::add","6"],[0,5,"Router.php.html#86","App\\App\\Router::dispatch","30"],[0,3,"Router.php.html#113","App\\App\\Router::runMiddlewares","12"],[0,2,"Router.php.html#126","App\\App\\Router::invoke","6"]]</script>
+  <script type="text/javascript" defer>
+  const barLabels = [
+    '0%',
+    '0-10%',
+    '10-20%',
+    '20-30%',
+    '30-40%',
+    '40-50%',
+    '50-60%',
+    '60-70%',
+    '70-80%',
+    '80-90%',
+    '90-100%',
+    '100%'
+  ];
+  const barConfig = (name, fullName, values) => ({
+    axis: {
+      x: {
+        type: "category",
+        categories: barLabels,
+      },
+      y: {
+        label: {
+          text: `#${name}`,
+          position: 'outer-top',
+        },
+      },
+    },
+    bindto: `#${name}CoverageDistribution`,
+    data: {
+      columns: [
+        [fullName].concat(values),
+      ],
+      colors: {
+        [fullName]: "rgba(69, 114, 167, 0.75)",
+      },
+      type: "bar",
+    },
+    bar: {
+      width: {
+        ratio: 0.9,
+      },
+    },
+    grid: {
+      focus: {
+        show: false,
+      },
+      x: {
+        show: true,
+      },
+      y: {
+        show: true,
+      },
+    },
+    legend: {
+      show: false,
+    },
+    tooltip: {
+      contents: function (data) {
+        return `<table class="bb-tooltip"><tbody>
+            <tr><th colspan="2">Coverage ${barLabels[data[0].x]}</th></tr>
+            <tr><td class="value">${data[0].value} ${name}</td></tr>
+          </tbody></table>`;
+      },
+      grouped: false,
+    },
+  });
+  bb.generate(
+    barConfig('classes', "Class Coverage", [6,0,0,0,0,0,0,0,0,0,0,0])
+  );
+  bb.generate(
+    barConfig('methods', "Method Coverage", [37,0,0,0,0,0,0,0,0,0,0,0])
+  );
+
+  const scatterConfig = (name, complexityData) => ({
+    axis: {
+      x: {
+        label: {
+          text: 'Code Coverage (in percent)',
+          position: 'outer-right',
+        },
+        tick: {
+          values: [0, 20, 40, 60, 80, 100],
+        },
+      },
+      y: {
+        label: {
+          text: 'Cyclomatic Complexity',
+          position: 'outer-top',
+        },
+        min: 0,
+        padding: {
+          bottom: 0,
+          top: 5,
+        },
+      },
+    },
+    bindto: `#${name}Complexity`,
+    data: {
+      columns: [
+        ["complexity_x"].concat(complexityData.map(d => d[0])),
+        ["complexity"].concat(complexityData.map(d => d[1])),
+      ],
+      onclick: function(data, element) {
+        window.location = complexityData[data.index][2];
+      },
+      type: "scatter",
+      xs: {
+        "complexity": "complexity_x",
+      },
+    },
+    grid: {
+      focus: {
+        show: true,
+        y: true,
+      },
+      x: {
+        show: true,
+      },
+      y: {
+        show: true,
+      },
+    },
+    legend: {
+      show: false,
+    },
+    tooltip: {
+      contents: function (data) {
+        const coverage = Math.round(data[0].x);
+        const complexity = data[0].value;
+        const targetName = complexityData[data[0].index][3];
+        const crap = complexityData[data[0].index][4];
+        return `<table class="bb-tooltip"><tbody>
+            <tr><th colspan="2">${targetName}</th></tr>
+            <tr class="bb-tooltip-name-complexity"><td>Coverage</td><td class="name">${coverage}%</td></tr>
+            <tr class="bb-tooltip-name-complexity"><td>Complexity</td><td class="value">${complexity}</td></tr>
+            <tr class="bb-tooltip-name-complexity"><td>Crap</td><td class="value">${crap}</td></tr>
+          </tbody></table>`;
+      },
+      grouped: false,
+    },
+  });
+  const classComplexityData = JSON.parse(document.getElementById('complexity_class').textContent);
+  bb.generate(
+    scatterConfig("class", classComplexityData)
+  );
+  const methodComplexityData = JSON.parse(document.getElementById('complexity_method').textContent);
+  bb.generate(
+    scatterConfig("method", methodComplexityData),
+  );
+  </script>
+ </body>
+</html>

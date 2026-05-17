@@ -8,6 +8,16 @@ class UserRepository implements UserRepositoryInterface
 {
     public function __construct(private PDO $pdo) {}
 
+    public function findById(int $id): ?array
+    {
+        $st = $this->pdo->prepare(
+            "SELECT * FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1"
+        );
+        $st->execute([$id]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function firstOrCreateByPhone(string $phone): array
     {
         $st = $this->pdo->prepare("SELECT * FROM users WHERE phone=? AND deleted_at IS NULL");

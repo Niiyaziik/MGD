@@ -5,6 +5,7 @@ namespace App\Service;
 
 use App\Repository\Contract\CandidateRepositoryInterface;
 use DomainException;
+use Throwable;
 
 final class CandidateService
 {
@@ -12,40 +13,47 @@ final class CandidateService
         private CandidateRepositoryInterface $repo
     ) {}
 
-
-    public function create(array $data): array
+    public function create(array $data): int
     {
         $clean = $this->validate($data, isUpdate: false);
         return $this->repo->create($clean);
     }
 
-
-    public function update(int $id, array $patch): array
+    public function update(int $id, array $patch): void
     {
-        $existing = $this->repo->find($id);
-        if (!$existing) {
+        if (!$this->candidateExists($id)) {
             throw new DomainException('Кандидат не найден');
         }
 
         $clean = $this->validate($patch, isUpdate: true);
-        return $this->repo->update($id, $clean);
+        $this->repo->update($id, $clean);
     }
 
     public function delete(int $id): void
     {
-        $ok = $this->repo->delete($id);
-        if (!$ok) {
+        if (!$this->candidateExists($id)) {
             throw new DomainException('Кандидат не найден');
         }
+
+        $this->repo->delete($id);
     }
 
+    private function candidateExists(int $id): bool
+    {
+        try {
+            return (bool)$this->repo->find($id);
+        } catch (Throwable) {
+            return false;
+        }
+    }
 
     private function validate(array $in, bool $isUpdate): array
     {
         $allowed = [
-            'surname','name','patronymic','district_id',
-            'email','phone','vk_id','photo',
+            'surname', 'name', 'patronymic', 'district_id',
+            'email', 'phone', 'vk_id', 'photo',
         ];
+
         $data = [];
         foreach ($allowed as $k) {
             if (array_key_exists($k, $in)) {
@@ -53,7 +61,7 @@ final class CandidateService
             }
         }
 
-        foreach (['surname','name','patronymic','email','phone','vk_id','photo'] as $k) {
+        foreach (['surname', 'name', 'patronymic', 'email', 'phone', 'vk_id', 'photo'] as $k) {
             if (array_key_exists($k, $data) && is_string($data[$k])) {
                 $data[$k] = trim($data[$k]);
                 if ($data[$k] === '') {
@@ -109,7 +117,7 @@ final class CandidateService
         if (array_key_exists('photo', $data) && $data['photo'] !== null) {
             $p = $data['photo'];
             $isUrl = filter_var($p, FILTER_VALIDATE_URL) !== false;
-            $isRel = str_st_starts_with($p, '/') || !preg_match('~^https?://~i', $p);
+            $isRel = str_starts_with($p, '/') || !preg_match('~^https?://~i', $p);
             if (!$isUrl && !$isRel) {
                 throw new DomainException('Некорректный путь к фото');
             }
@@ -119,9 +127,9 @@ final class CandidateService
     }
 }
 
-
-if (!function_exists('str_starts_with')) {
-    function str_starts_with(string $haystack, string $needle): bool {
+if (!function_exists('App\\Service\\str_starts_with') && !function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool
+    {
         return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
     }
 }

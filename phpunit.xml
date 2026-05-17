@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         colors="true"
+         testdox="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="Unit tests">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration tests">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Functional tests">
+            <directory>tests/Functional</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+        </exclude>
+    </source>
+
+    <coverage>
+        <report>
+            <html outputDirectory="coverage-report"/>
+            <text outputFile="coverage-report/coverage-summary.txt"/>
+        </report>
+    </coverage>
+</phpunit>

@@ -9,7 +9,7 @@ abstract class BaseModel {
     protected static string $primaryKey = 'id';
     protected static array $fillable = [];
 
-    public int $id;
+    public ?int $id = null;
     public ?string $created_at = null;
     public ?string $updated_at = null;
     public ?string $deleted_at = null;

@@ -1,0 +1,24 @@
+
+
+Code Coverage Report:
+  2026-05-17 17:01:44
+
+ Summary:
+  Classes: 28.57% (2/7)
+  Methods: 75.00% (30/40)
+  Lines:   93.08% (511/549)
+
+App\Service\AdminService
+  Methods: 100.00% ( 5/ 5)   Lines: 100.00% ( 35/ 35)
+App\Service\Auth
+  Methods:  80.00% ( 4/ 5)   Lines:  62.50% (  5/  8)
+App\Service\CandidateService
+  Methods:  83.33% ( 5/ 6)   Lines:  96.61% ( 57/ 59)
+App\Service\FiasService
+  Methods:  60.00% ( 6/10)   Lines:  89.91% (196/218)
+App\Service\SmsService
+  Methods:  66.67% ( 4/ 6)   Lines:  95.45% (126/132)
+App\Service\UserService
+  Methods:  60.00% ( 3/ 5)   Lines:  94.44% ( 68/ 72)
+App\Service\VoteService
+  Methods: 100.00% ( 3/ 3)   Lines: 100.00% ( 23/ 23)
