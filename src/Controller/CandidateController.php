@@ -58,12 +58,58 @@ class CandidateController extends BaseController
         if ($id <= 0) { http_response_code(400); echo json_encode(['error'=>'bad id']); return; }
         $c = $this->candidates->find($id);
         if (!$c) { http_response_code(404); echo json_encode(['error'=>'not found']); return; }
+        $districtNum = (int)($c['district'] ?? 0);
+        if ($districtNum > 0) {
+            $c['district_addresses'] = $this->loadDistrictAddresses($districtNum);
+        }
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($c, JSON_UNESCAPED_UNICODE);
         return;
         }
 
+        $candidateFio = '';
+        if ($id > 0) {
+            try {
+                $c = $this->candidates->find($id);
+                $candidateFio = trim(
+                    ($c['surname'] ?? '') . ' ' .
+                    ($c['name'] ?? '') . ' ' .
+                    ($c['patronymic'] ?? '')
+                );
+            } catch (\Throwable) {
+                $candidateFio = '';
+            }
+        }
+
         require __DIR__ . '/../../public/candidate/candidate.php';
+    }
+
+    /** @return list<string> */
+    private function loadDistrictAddresses(int $districtNum): array
+    {
+        if ($districtNum < 1 || $districtNum > 40) {
+            return [];
+        }
+
+        $path = __DIR__ . '/../../public/assets/district/' . $districtNum . '.txt';
+        if (!is_readable($path)) {
+            return [];
+        }
+
+        $lines = file($path, FILE_IGNORE_NEW_LINES);
+        if ($lines === false) {
+            return [];
+        }
+
+        $addresses = [];
+        foreach ($lines as $line) {
+            $line = trim((string)$line);
+            if ($line !== '') {
+                $addresses[] = $line;
+            }
+        }
+
+        return $addresses;
     }
 
     public function store(): void

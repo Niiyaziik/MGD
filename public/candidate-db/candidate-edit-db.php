@@ -7,7 +7,7 @@ function e($v) { return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Редактирование кандидата #<?= e($c['id'] ?? '') ?></title>
+    <title>Редактирование кандидата {fio} #<?= e($c['id'] ?? '') ?></title>
     <link rel="stylesheet" href="/assets/main.css">
     <style>
         .candidate-edit {

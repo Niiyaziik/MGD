@@ -51,7 +51,7 @@
 
 
         <title>
-            Новости Ульяновской Городской Думы    </title>
+            Кандидаты молодежной городской думы    </title>
         <!-- Yandex.Metrika counter -->
         <script type="text/javascript">
         (function(m, e, t, r, i, k, a) {
@@ -263,6 +263,7 @@
                 <?php require __DIR__ . '/../part/footer.php'; ?>
 
                 <script src="/js/load-modals.js"></script>
+                <script src="/js/message-modal.js"></script>
                 <script src="/js/modals.js"></script>
                 <script>
                         // Эта функция вызывается, когда Гугловский скрипт reCAPTCHA загружен

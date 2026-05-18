@@ -16,7 +16,8 @@
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://lidrekon.ru/slep/js/uhpv-full.min.js"></script>
     <style> .nca-cookiesaccept-line { box-sizing: border-box !important; margin: 0 !important; border: none !important; width: 100% !important; min-height: 10px !important; max-height: 250px !important; display: block; clear: both !important; padding: 12px !important; position: fixed; top: 0px !important; opacity: 1; transform: translateY(0%); z-index: 99999; } .nca-cookiesaccept-line > div { display: flex; align-items: center; } .nca-cookiesaccept-line > div > div { padding-left: 5%; padding-right: 5%; } .nca-cookiesaccept-line a { color: inherit; text-decoration:underline; } @media screen and (max-width:767px) { .nca-cookiesaccept-line > div > div { padding-left: 1%; padding-right: 1%; } } </style> 
-    <title> Округа кандидатов молодёжной думы </title>
+    <?php $districtNum = max(0, (int)($_GET['district'] ?? 0)); ?>
+    <title> Округ <?= $districtNum > 0 ? ' ' . $districtNum : '' ?> молодёжной городской думы </title>
     <link rel="stylesheet" href="/assets/main.css" />
 </head>
 <body>

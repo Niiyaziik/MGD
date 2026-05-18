@@ -1095,6 +1095,49 @@ main .content {
   white-space: pre-line;
 }
 
+.deputat-district {
+  width: 100%;
+  margin-top: 40px;
+  padding: 24px 0 10px;
+  box-sizing: border-box;
+}
+
+.deputat-district__title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #000;
+  margin: 0 0 16px;
+}
+
+.deputat-district__label {
+  font-size: 20px;
+  font-weight: bold;
+  color: #000;
+  margin: 0 0 20px;
+}
+
+.deputat-district__list {
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
+  columns: 2;
+  column-gap: 40px;
+}
+
+.deputat-district__item {
+  font-size: 16px;
+  line-height: 1.45;
+  color: #333;
+  margin-bottom: 10px;
+  break-inside: avoid;
+}
+
+@media (max-width: 900px) {
+  .deputat-district__list {
+    columns: 1;
+  }
+}
+
 .add-card__text {
   text-decoration: none;
 }

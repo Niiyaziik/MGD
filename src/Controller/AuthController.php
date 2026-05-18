@@ -302,7 +302,7 @@ class AuthController extends BaseController
         if (!$addressInfo) {
             $this->json([
                 'ok'    => false,
-                'error' => 'По указанному адресу не найден дом или округ. Проверьте корректность улицы и номера дома.',
+                'error' => 'По указанному адресу не найден округ. Проверьте корректность адреса.',
             ], 422);
             return;
         }

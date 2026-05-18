@@ -49,8 +49,7 @@
     <script type="text/javascript">var _ba = _ba || []; _ba.push(["aid", "e5640f164bfeaddef4e562ab11737ab2"]); _ba.push(["host", "ugd.ru"]); (function() {var ba = document.createElement("script"); ba.type = "text/javascript"; ba.async = true;ba.src = (document.location.protocol == "https:" ? "https://" : "http://") + "bitrix.info/ba.js";var s = document.getElementsByTagName("script")[0];s.parentNode.insertBefore(ba, s);})();</script>
 
 
-        <title>
-            Новости Ульяновской Городской Думы    </title>
+    <title><?= !empty($candidateFio) ? htmlspecialchars($candidateFio, ENT_QUOTES, 'UTF-8') : 'Кандидат' ?></title>
         <!-- Yandex.Metrika counter -->
         <script type="text/javascript">
         (function(m, e, t, r, i, k, a) {
@@ -149,9 +148,32 @@
                             const c = await res.json();
 
                             const fio = `${c.surname || ''} ${c.name || ''} ${c.patronymic || ''}`.trim();
+                            if (fio) {
+                                document.title = fio;
+                            }
+
+                            function escapeHtml(text) {
+                                return String(text)
+                                    .replace(/&/g, '&amp;')
+                                    .replace(/</g, '&lt;')
+                                    .replace(/>/g, '&gt;')
+                                    .replace(/"/g, '&quot;');
+                            }
+
+                            const districtNum = Number(c.district) || 0;
+                            const districtAddresses = Array.isArray(c.district_addresses) ? c.district_addresses : [];
+                            const districtListHtml = districtAddresses
+                                .map((line) => `<li class="deputat-district__item">${escapeHtml(line)}</li>`)
+                                .join('');
+                            const districtSection = districtNum && districtListHtml ? `
+                                <section class="deputat-district">
+                                    <h2 class="deputat-district__title">Избирательный округ ${districtNum}</h2>
+                                    <p class="deputat-district__label">Границы округа:</p>
+                                    <ul class="deputat-district__list">${districtListHtml}</ul>
+                                </section>
+                            ` : '';
 
                             const tpl = `
-                                </div>
                                 <section class="deputat">
                                     <div class="deputat__title">
                                         <h1 class="deputat__name">${fio}</h1>
@@ -160,15 +182,13 @@
                                             <a href="/candidates">Все кандидаты</a>
                                         </div>
                                     </div>
-                                    <pre></pre>
-                                    <p class="deputat__subtitle"></p>
                                     <div class="deputat__body">
-                                        <img class="deputat__image" src="${c.photo || '/assets/img/candidates/placeholder.jpeg'}">
+                                        <img class="deputat__image" src="${c.photo || '/assets/img/candidates/placeholder.jpeg'}" alt="${fio}">
                                         <div class="deputat__contacts">
                                             <span class="deputat__contacts-title">Контакты</span>
                                             <ul class="deputat__contacts-list">
                                                 <li class="deputat__contacts-district">
-                                                            Округ Адрес г.Ульяновск, ул. Кузнецова, д. 7 ${c.district || '—'}
+                                                            Округ ${c.district || '—'}
                                                 </li>
                                                 <li class="deputat__contacts-email">
                                                             ${c.email || '—'}
@@ -183,8 +203,10 @@
                                             <button id="about__more">Показать</button>
                                             <span class="deputat__about-title">О кандидате</span>
                                             <div class="deputat__about-text">${c.description || 'Информация о кандидате отсутствует'}</div>
-                                    </div>          
+                                        </div>
+                                    </div>
                                 </section>
+                                ${districtSection}
                             `;
 
                             container.innerHTML = tpl;
@@ -199,6 +221,7 @@
 
         <?php require __DIR__ . '/../part/footer.php'; ?>
         <script src="/js/load-modals.js"></script>
+        <script src="/js/message-modal.js"></script>
         <script src="/js/modals.js"></script>
         <script>
             // Эта функция вызывается, когда Гугловский скрипт reCAPTCHA загружен
